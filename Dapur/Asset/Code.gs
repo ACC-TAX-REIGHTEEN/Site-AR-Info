@@ -1,7 +1,7 @@
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
-    .setTitle('Site AR - PT ABC')
+    .setTitle('Site AR - PT ABC ')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -45,24 +45,47 @@ function getARData(username) {
   var piutangSheet = ss.getSheetByName('Piutang');
   
   if (!confSheet || !piutangSheet) {
-    throw new Error('Sheet conf atau Piutang tidak ditemukan!');
+    return { success: false, message: 'Sheet conf atau Piutang tidak ditemukan!' };
   }
   
   var confData = confSheet.getDataRange().getValues();
+  var userFound = false;
   var userGrup1 = '';
   var userGrup2 = '';
+  var userGrup3 = '';
+  var userHari = '';
   
+  var cleanUsername = String(username || '').trim().toUpperCase();
+
   for (var i = 1; i < confData.length; i++) {
-    if (String(confData[i][0] || '').trim() === username) {
+    var registeredUser = String(confData[i][0] || '').trim().toUpperCase();
+    if (registeredUser === cleanUsername) {
+      userFound = true;
       userGrup1 = String(confData[i][2] || '').trim();
       userGrup2 = String(confData[i][3] || '').trim();
+      userGrup3 = String(confData[i][4] || '').trim();
+      userHari  = String(confData[i][5] || '').trim();
       break;
     }
   }
   
+  if (!userFound) {
+    return {
+      success: false,
+      message: 'Akses Ditolak! Akun "' + username + '" tidak terdaftar atau telah dihapus dari sistem.'
+    };
+  }
+  
   var prefixesGrup1 = userGrup1 ? userGrup1.split('|').map(function(s){ return s.trim(); }) : [];
   var keywordsGrup2 = userGrup2 ? userGrup2.split('|').map(function(s){ return s.trim().toUpperCase(); }) : [];
+  var keywordsGrup3 = userGrup3 ? userGrup3.split('|').map(function(s){ return s.trim().toUpperCase(); }) : [];
   
+  var primaryDepoCode = prefixesGrup1.length > 0 ? prefixesGrup1[0] : '';
+  var isInv = userHari.toLowerCase() === 'inv';
+  
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
   var piutangValues = piutangSheet.getDataRange().getValues();
   var filteredRows = [];
   
@@ -71,7 +94,8 @@ function getARData(username) {
     
     rawRows.forEach(function(row) {
       var noPelanggan = String(row[0] || '').trim();
-      var namaKontak = String(row[9] || '').trim().toUpperCase();
+      var namaPenjual = String(row[8] || '').trim().toUpperCase();
+      var namaKontak  = String(row[9] || '').trim().toUpperCase();
       
       var matchGrup1 = false;
       if (prefixesGrup1.length === 0) {
@@ -91,15 +115,47 @@ function getARData(username) {
         matchGrup2 = true;
       } else {
         for (var k = 0; k < keywordsGrup2.length; k++) {
-          var kw = keywordsGrup2[k];
-          if (kw && namaKontak.indexOf(kw) !== -1) {
+          var kw2 = keywordsGrup2[k];
+          if (kw2 && namaKontak.indexOf(kw2) !== -1) {
             matchGrup2 = true;
             break;
           }
         }
       }
+
+      var matchGrup3 = false;
+      if (keywordsGrup3.length === 0) {
+        matchGrup3 = true;
+      } else {
+        for (var m = 0; m < keywordsGrup3.length; m++) {
+          var kw3 = keywordsGrup3[m];
+          if (kw3 && namaPenjual.indexOf(kw3) !== -1) {
+            matchGrup3 = true;
+            break;
+          }
+        }
+      }
       
-      if (matchGrup1 && matchGrup2) {
+      if (matchGrup1 && matchGrup2 && matchGrup3) {
+        var umurJtVal = String(row[6] || '');
+        if (isInv) {
+          var tglFakturRaw = row[2];
+          var tglFakturDate = null;
+          
+          if (tglFakturRaw instanceof Date) {
+            tglFakturDate = new Date(tglFakturRaw.getTime());
+          } else if (typeof tglFakturRaw === 'string' && tglFakturRaw.trim() !== '') {
+            tglFakturDate = new Date(tglFakturRaw);
+          }
+          
+          if (tglFakturDate && !isNaN(tglFakturDate.getTime())) {
+            tglFakturDate.setHours(0,0,0,0);
+            var diffTime = today.getTime() - tglFakturDate.getTime();
+            var diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            umurJtVal = diffDays + ' hari';
+          }
+        }
+
         filteredRows.push({
           noPelanggan: noPelanggan,
           noFaktur: String(row[1] || ''),
@@ -107,7 +163,7 @@ function getARData(username) {
           jatuhTempo: formatDate(row[3]),
           nilaiFaktur: Number(row[4]) || 0,
           sisaPiutang: Number(row[5]) || 0,
-          umurJt: String(row[6] || ''),
+          umurJt: umurJtVal,
           namaPelanggan: String(row[7] || ''),
           namaPenjual: String(row[8] || ''),
           namaKontak: String(row[9] || ''),
@@ -132,8 +188,8 @@ function getARData(username) {
   
   var bankMap = {};
   for (var b = 1; b < confData.length; b++) {
-    var depoCode = String(confData[b][5] || '').trim();
-    var bankInfo = String(confData[b][6] || '').trim();
+    var depoCode = String(confData[b][6] || '').trim();
+    var bankInfo = String(confData[b][7] || '').trim();
     if (depoCode && bankInfo) {
       if (!bankMap[depoCode]) bankMap[depoCode] = [];
       if (bankMap[depoCode].indexOf(bankInfo) === -1) {
@@ -158,18 +214,21 @@ function getARData(username) {
     }
     
     if (isMatched) {
+      var isPrimary = (primaryDepoCode && (depo === primaryDepoCode || depo.indexOf(primaryDepoCode) !== -1 || primaryDepoCode.indexOf(depo) !== -1));
       var banks = bankMap[depo];
       bankOptions.push({
         depo: depo,
         banks: banks,
-        isSingle: banks.length === 1
+        isLocked: isPrimary
       });
     }
   });
   
   return {
+    success: true,
     items: filteredRows,
-    bankOptions: bankOptions
+    bankOptions: bankOptions,
+    isInv: isInv
   };
 }
 
