@@ -1,7 +1,7 @@
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
-    .setTitle('Site AR - PT ABC ')
+    .setTitle('Site AR - PT ABC')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -53,6 +53,7 @@ function getARData(username) {
   var userGrup1 = '';
   var userGrup2 = '';
   var userGrup3 = '';
+  var userGrup4 = '';
   var userHari = '';
   
   var cleanUsername = String(username || '').trim().toUpperCase();
@@ -64,7 +65,8 @@ function getARData(username) {
       userGrup1 = String(confData[i][2] || '').trim();
       userGrup2 = String(confData[i][3] || '').trim();
       userGrup3 = String(confData[i][4] || '').trim();
-      userHari  = String(confData[i][5] || '').trim();
+      userGrup4 = String(confData[i][5] || '').trim();
+      userHari  = String(confData[i][6] || '').trim();
       break;
     }
   }
@@ -79,6 +81,7 @@ function getARData(username) {
   var prefixesGrup1 = userGrup1 ? userGrup1.split('|').map(function(s){ return s.trim(); }) : [];
   var keywordsGrup2 = userGrup2 ? userGrup2.split('|').map(function(s){ return s.trim().toUpperCase(); }) : [];
   var keywordsGrup3 = userGrup3 ? userGrup3.split('|').map(function(s){ return s.trim().toUpperCase(); }) : [];
+  var keywordsGrup4 = userGrup4 ? userGrup4.split('|').map(function(s){ return s.trim().toUpperCase(); }) : [];
   
   var primaryDepoCode = prefixesGrup1.length > 0 ? prefixesGrup1[0] : '';
   var isInv = userHari.toLowerCase() === 'inv';
@@ -135,8 +138,19 @@ function getARData(username) {
           }
         }
       }
+
+      var matchGrup4 = true;
+      if (keywordsGrup4.length > 0) {
+        for (var n = 0; n < keywordsGrup4.length; n++) {
+          var kw4 = keywordsGrup4[n];
+          if (kw4 && namaPenjual.indexOf(kw4) !== -1) {
+            matchGrup4 = false;
+            break;
+          }
+        }
+      }
       
-      if (matchGrup1 && matchGrup2 && matchGrup3) {
+      if (matchGrup1 && matchGrup2 && matchGrup3 && matchGrup4) {
         var umurJtVal = String(row[6] || '');
         if (isInv) {
           var tglFakturRaw = row[2];
@@ -188,8 +202,8 @@ function getARData(username) {
   
   var bankMap = {};
   for (var b = 1; b < confData.length; b++) {
-    var depoCode = String(confData[b][6] || '').trim();
-    var bankInfo = String(confData[b][7] || '').trim();
+    var depoCode = String(confData[b][7] || '').trim();
+    var bankInfo = String(confData[b][8] || '').trim();
     if (depoCode && bankInfo) {
       if (!bankMap[depoCode]) bankMap[depoCode] = [];
       if (bankMap[depoCode].indexOf(bankInfo) === -1) {
