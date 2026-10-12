@@ -39,6 +39,17 @@ function changePassword(username, oldPassword, newPassword) {
   return { success: false, message: 'Sandi lama tidak cocok!' };
 }
 
+function formatWaktuPembaruan(val) {
+  if (!val) return '-';
+  if (val instanceof Date) {
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    var hh = ('0' + val.getHours()).slice(-2);
+    var mm = ('0' + val.getMinutes()).slice(-2);
+    return val.getDate() + ' ' + months[val.getMonth()] + ' ' + val.getFullYear() + ' - ' + hh + '.' + mm;
+  }
+  return String(val);
+}
+
 function getARData(username) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var confSheet = ss.getSheetByName('conf');
@@ -95,8 +106,13 @@ function getARData(username) {
 
   var piutangValues = piutangSheet.getDataRange().getValues();
   var filteredRows = [];
+  var waktuPembaruan = '-';
   
   if (piutangValues.length > 1) {
+    if (piutangValues[1].length > 11) {
+      waktuPembaruan = formatWaktuPembaruan(piutangValues[1][11]);
+    }
+
     var rawRows = piutangValues.slice(1);
     
     rawRows.forEach(function(row) {
@@ -247,14 +263,15 @@ function getARData(username) {
     items: filteredRows,
     bankOptions: bankOptions,
     isInv: isInv,
-    hasSummaryAccess: hasSummaryAccess
+    hasSummaryAccess: hasSummaryAccess,
+    waktuPembaruan: waktuPembaruan
   };
 }
 
 function formatDate(val) {
   if (!val) return '';
   if (val instanceof Date) {
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
     return val.getDate() + ' ' + months[val.getMonth()] + ' ' + val.getFullYear();
   }
   return String(val);
