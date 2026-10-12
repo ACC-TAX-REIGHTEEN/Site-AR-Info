@@ -55,6 +55,7 @@ function getARData(username) {
   var userGrup3 = '';
   var userGrup4 = '';
   var userHari = '';
+  var hasSummaryAccess = false;
   
   var cleanUsername = String(username || '').trim().toUpperCase();
 
@@ -67,6 +68,9 @@ function getARData(username) {
       userGrup3 = String(confData[i][4] || '').trim();
       userGrup4 = String(confData[i][5] || '').trim();
       userHari  = String(confData[i][6] || '').trim();
+      
+      var ringkasanVal = String(confData[i][7] || '').trim().toUpperCase();
+      hasSummaryAccess = (ringkasanVal === 'YA');
       break;
     }
   }
@@ -202,8 +206,8 @@ function getARData(username) {
   
   var bankMap = {};
   for (var b = 1; b < confData.length; b++) {
-    var depoCode = String(confData[b][7] || '').trim();
-    var bankInfo = String(confData[b][8] || '').trim();
+    var depoCode = String(confData[b][8] || '').trim();
+    var bankInfo = String(confData[b][9] || '').trim();
     if (depoCode && bankInfo) {
       if (!bankMap[depoCode]) bankMap[depoCode] = [];
       if (bankMap[depoCode].indexOf(bankInfo) === -1) {
@@ -220,7 +224,7 @@ function getARData(username) {
     } else {
       for (var g = 0; g < prefixesGrup1.length; g++) {
         var pref = prefixesGrup1[g];
-        if (pref === depo || depo.indexOf(pref) !== -1 || pref.indexOf(depo) !== -1) {
+        if (pref && (pref === depo || depo.indexOf(pref) !== -1 || pref.indexOf(depo) !== -1)) {
           isMatched = true;
           break;
         }
@@ -242,7 +246,8 @@ function getARData(username) {
     success: true,
     items: filteredRows,
     bankOptions: bankOptions,
-    isInv: isInv
+    isInv: isInv,
+    hasSummaryAccess: hasSummaryAccess
   };
 }
 

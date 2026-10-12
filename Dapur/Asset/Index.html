@@ -3,10 +3,12 @@
 <head>
   <base target="_top">
   <meta charset="utf-8">
-  <title>Site AR - PT ABC</title>
+  <title>Site AR - ABC</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -17,24 +19,24 @@
 <body class="bg-gray-100 text-gray-800 min-h-screen">
 
   <div id="loginSection" class="flex flex-col justify-center items-center min-h-screen px-4">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
       <div class="text-center mb-6">
-        <img src="https://github.com/ACC-TAX-REIGHTEEN/Site-AR-Info/blob/main/Dapur/Asset/logo-nav.png?raw=true" alt="Logo" class="h-16 mx-auto mb-4 object-contain">
-        <h2 class="text-xl font-bold text-gray-800">Sistem Informasi AR</h2>
-        <p class="text-sm text-gray-500">PT ABC</p>
+        <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" alt="Logo" class="h-14 sm:h-16 mx-auto mb-3 object-contain">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Sistem Informasi AR</h2>
+        <p class="text-xs sm:text-sm text-gray-500">ABC</p>
       </div>
 
       <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="mb-4">
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Pengguna</label>
-          <input type="text" id="inputUser" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan Pengguna">
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Pengguna</label>
+          <input type="text" id="inputUser" required class="w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan Pengguna">
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Sandi</label>
-          <input type="password" id="inputPass" required class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan Sandi">
+          <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Sandi</label>
+          <input type="password" id="inputPass" required class="w-full px-3.5 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan Sandi">
         </div>
-        <div id="loginMsg" class="text-sm text-red-500 mb-4 text-center hidden"></div>
-        <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition duration-200 shadow-md">
+        <div id="loginMsg" class="text-xs sm:text-sm text-red-500 mb-4 text-center hidden"></div>
+        <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition duration-200 shadow-md">
           Masuk Sesi
         </button>
       </form>
@@ -43,60 +45,63 @@
 
   <div id="mainSection" class="hidden min-h-screen flex flex-col">
     <header class="bg-navy text-white shadow-md sticky top-0 z-20">
-      <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-          <img src="https://github.com/ACC-TAX-REIGHTEEN/Site-AR-Info/blob/main/Dapur/Asset/logo-nav.png?raw=true" class="h-8 object-contain bg-white rounded p-1">
-          <span class="font-bold text-lg tracking-wide hidden sm:inline">PT ABC</span>
+      <div class="max-w-7xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-2">
+          <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" class="h-7 sm:h-8 object-contain bg-white rounded p-1">
+          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">ABC</span>
         </div>
-        <div class="flex items-center space-x-3">
-          <span id="displayUser" class="text-sm font-medium bg-blue-900 px-3 py-1 rounded-full border border-blue-700"></span>
-          <button onclick="openChangePasswordModal()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition">Ubah Sandi</button>
-          <button onclick="handleLogout()" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition">Keluar</button>
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button id="btnSummaryFeature" onclick="openSummaryModal()" class="hidden text-[11px] sm:text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
+            📊 Ringkasan
+          </button>
+          <span id="displayUser" class="text-[11px] sm:text-xs font-semibold bg-blue-900 px-2.5 py-1 rounded-full border border-blue-700"></span>
+          <button onclick="openChangePasswordModal()" class="text-[10px] sm:text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1.5 rounded-lg transition">Sandi</button>
+          <button onclick="handleLogout()" class="text-[10px] sm:text-xs bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded-lg transition">Keluar</button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 pt-6 pb-80 sm:pb-32 flex-grow w-full">
-      <div class="bg-white rounded-2xl shadow-md p-5 mb-6 border border-gray-100">
-        <label class="block text-sm font-bold text-gray-700 mb-2">🔍 Cari & Pilih (No. Pelanggan / Nama Pelanggan / Nama Kontak):</label>
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-48 sm:pb-32 flex-grow w-full">
+      <div class="bg-white rounded-2xl shadow-md p-4 sm:p-5 mb-5 border border-gray-100">
+        <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">🔍 Cari & Pilih (No. Pelanggan / Nama Pelanggan / Nama Kontak):</label>
         
         <div class="relative">
-          <input type="text" id="searchInput" onkeyup="filterSearchDropdown()" placeholder="Ketik untuk mencari..." class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none mb-2">
+          <input type="text" id="searchInput" onkeyup="filterSearchDropdown()" placeholder="Ketik untuk mencari..." class="w-full px-3.5 py-2 text-xs sm:text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none mb-2">
           
-          <div id="searchDropdown" class="max-h-48 overflow-auto border rounded-xl p-2 bg-gray-50 space-y-1">
+          <div id="searchDropdown" class="max-h-40 sm:max-h-48 overflow-auto border rounded-xl p-2 bg-gray-50 space-y-1">
           </div>
         </div>
 
-        <div class="flex justify-between items-center mt-3 text-xs text-gray-500">
+        <div class="flex justify-between items-center mt-3 text-[11px] sm:text-xs text-gray-500">
           <span id="selectedFilterCount">0 entitas terpilih</span>
           <div>
-            <button onclick="selectAllFilters(true)" class="text-blue-600 hover:underline mr-3 font-semibold">Centang Semua</button>
-            <button onclick="selectAllFilters(false)" class="text-red-500 hover:underline font-semibold">Hapus Centang Semua</button>
+            <button onclick="selectAllFilters(true)" class="text-blue-600 hover:underline mr-2 sm:mr-3 font-semibold">Centang Semua</button>
+            <button onclick="selectAllFilters(false)" class="text-red-500 hover:underline font-semibold">Hapus Centang</button>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-12 sm:mb-6">
-        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-          <h3 class="font-bold text-gray-700">Daftar Piutang / AR</h3>
-          <button onclick="toggleSelectAllRows()" id="btnSelectAllRows" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold px-3 py-1.5 rounded-lg">Pilih Semua Data</button>
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-6">
+        <div class="p-3.5 sm:p-4 bg-gray-50 border-b flex justify-between items-center">
+          <h3 class="font-bold text-xs sm:text-sm text-gray-700">Daftar Piutang / AR</h3>
+          <button onclick="toggleSelectAllRows()" id="btnSelectAllRows" class="text-[11px] sm:text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg">Pilih Semua Data</button>
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-center text-gray-600">
-            <thead class="text-xs uppercase bg-navy text-white sticky top-0">
+            <thead class="text-[11px] uppercase bg-navy text-white sticky top-0">
               <tr>
-                <th class="p-3 text-center"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAllRows(this.checked)"></th>
-                <th class="p-3 text-center">No. Faktur</th>
-                <th class="p-3 text-center">Tgl Faktur</th>
-                <th class="p-3 text-center">Jatuh Tempo</th>
-                <th class="p-3 text-center">Nilai Faktur</th>
-                <th class="p-3 text-center">Sisa Piutang</th>
-                <th class="p-3 text-center">Umur JT</th>
-                <th class="p-3 text-center">Nama Pelanggan</th>
-                <th class="p-3 text-center">Nama Penjual</th>
-                <th class="p-3 text-center">Nama Kontak</th>
-                <th class="p-3 text-center">Tanggal JT</th>
+                <th class="p-2.5 sm:p-3 text-center"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAllRows(this.checked)"></th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">No. Faktur</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Tgl Faktur</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Jatuh Tempo</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Nilai Faktur</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Sisa Piutang</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Umur JT</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Nama Pelanggan</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Nama Penjual</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Nama Kontak</th>
+                <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Tanggal JT</th>
               </tr>
             </thead>
             <tbody id="arTableBody">
@@ -107,38 +112,156 @@
       </div>
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl p-4 z-10">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex flex-wrap items-center gap-4 text-xs md:text-sm font-semibold">
-          <div class="bg-blue-50 text-blue-900 px-3 py-2 rounded-xl border border-blue-200">
-            Total Nilai Faktur: <span id="sumNilaiFaktur" class="font-bold">Rp 0</span>
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-2.5 sm:p-4 z-10">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-sm font-semibold w-full md:w-auto">
+          <div class="bg-blue-50 text-blue-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-blue-200 text-center sm:text-left">
+            <span class="text-gray-500 block text-[10px] sm:hidden">Nilai Faktur</span>
+            Total Nilai: <span id="sumNilaiFaktur" class="font-bold block sm:inline">Rp 0</span>
           </div>
-          <div class="bg-amber-50 text-amber-900 px-3 py-2 rounded-xl border border-amber-200">
-            Total Sisa Piutang: <span id="sumSisaPiutang" class="font-bold">Rp 0</span>
+          <div class="bg-amber-50 text-amber-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-amber-200 text-center sm:text-left">
+            <span class="text-gray-500 block text-[10px] sm:hidden">Sisa Piutang</span>
+            Total Sisa: <span id="sumSisaPiutang" class="font-bold block sm:inline">Rp 0</span>
           </div>
-          <div id="mainTotalJTContainer" class="bg-red-50 text-red-900 px-3 py-2 rounded-xl border border-red-200">
+          <div id="mainTotalJTContainer" class="col-span-2 sm:col-span-1 bg-red-50 text-red-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-red-200 text-center sm:text-left">
             Total Piutang JT: <span id="sumPiutangJT" class="font-bold">-</span>
           </div>
         </div>
 
-        <button onclick="openPreviewModal()" id="btnPreview" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition">
+        <button onclick="openPreviewModal()" id="btnPreview" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition">
           Preview Pilihan Data
         </button>
       </div>
     </div>
   </div>
 
+  <div id="summaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden relative">
+      <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-sm sm:text-lg flex items-center gap-2">
+          📊 Ringkasan Analisis Piutang
+        </h3>
+        <button onclick="closeSummaryModal()" class="text-white hover:text-gray-300 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div class="flex border-b bg-gray-100 text-xs sm:text-sm font-bold overflow-x-auto shrink-0 sticky top-0 z-10 shadow-sm">
+        <button id="tabBtn1" onclick="switchSummaryTab(1)" class="flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-blue-600 text-blue-600 bg-white transition whitespace-nowrap">
+          📋 Fitur 1: Umur JT Asli Accurate
+        </button>
+        <button id="tabBtn2" onclick="switchSummaryTab(2)" class="flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-transparent text-gray-500 hover:text-navy transition whitespace-nowrap">
+          📈 Fitur 2: Hitungan Tgl Faktur - Hari Ini
+        </button>
+      </div>
+
+      <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-6">
+        <div id="summaryLoading" class="text-center py-12 text-gray-500 font-semibold">
+          ⏳ Memuat data ringkasan piutang...
+        </div>
+
+        <div id="summaryContent" class="hidden space-y-6">
+          <div class="bg-gray-50 rounded-2xl p-3.5 sm:p-5 border border-gray-200">
+            <h4 id="summarySectionTitle" class="font-bold text-gray-800 text-xs sm:text-base mb-3 sm:mb-4 border-b pb-2 text-navy">
+              Analisis Rentang Umur
+            </h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left border-collapse border border-gray-300 bg-white shadow-sm rounded-lg">
+                  <thead>
+                    <tr class="bg-navy text-white text-center uppercase text-[11px]">
+                      <th class="p-2 border border-gray-300">Kategori Umur</th>
+                      <th class="p-2 border border-gray-300">Jml Faktur</th>
+                      <th class="p-2 border border-gray-300">Total Sisa Piutang</th>
+                    </tr>
+                  </thead>
+                  <tbody id="summaryBucketTbody" class="text-center font-medium">
+                  </tbody>
+                  <tfoot>
+                    <tr class="bg-blue-100 font-bold text-navy text-center">
+                      <td class="p-2 border border-gray-300">TOTAL KESELURUHAN</td>
+                      <td class="p-2 border border-gray-300" id="sumTotalBucketFaktur">0</td>
+                      <td class="p-2 border border-gray-300" id="sumTotalBucketPiutang">Rp 0</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div class="flex flex-col items-center justify-center p-2 bg-white rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
+                <h5 class="text-xs font-bold text-gray-600 mb-2">Komposisi Piutang Berdasarkan Umur</h5>
+                <div class="w-full max-w-[240px] sm:max-w-[260px]">
+                  <canvas id="summaryPieChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail Data Lengkap -->
+          <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+              <h4 id="detailSectionTitle" class="font-bold text-gray-800 text-xs sm:text-sm text-navy">
+                Daftar Detail Piutang
+              </h4>
+              <span id="detailCountBadge" class="text-[11px] sm:text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 sm:py-1 rounded-full font-bold">0 faktur</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-72 sm:max-h-80 overflow-y-auto border rounded-xl">
+              <table class="w-full text-[11px] text-center border-collapse">
+                <thead class="bg-navy text-white sticky top-0 uppercase text-[10px]">
+                  <tr>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Umur</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">No. Pelanggan</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Nama Pelanggan</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">No. Faktur</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Tgl Faktur</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Jatuh Tempo</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Nilai Faktur</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Sisa Piutang</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Nama Penjual</th>
+                    <th class="p-2 border border-blue-900 whitespace-nowrap">Nama Kontak</th>
+                  </tr>
+                </thead>
+                <tbody id="summaryDetailTbody" class="divide-y divide-gray-200">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3.5 sm:p-4 bg-gray-100 border-t flex justify-end shrink-0">
+        <button onclick="closeSummaryModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded-xl shadow">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <div id="previewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
-      <div class="p-4 bg-gray-100 border-b flex justify-between items-center">
-        <h3 class="font-bold text-gray-800">Pratinjau & Unduh File Gambar</h3>
+      <div class="p-3.5 sm:p-4 bg-gray-100 border-b flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-xs sm:text-base text-gray-800">Pratinjau & Unduh File Gambar</h3>
         <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-800 text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="px-3 py-2.5 sm:px-6 sm:pt-4 bg-white border-b border-gray-100 shrink-0">
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 sm:p-3.5">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <span class="text-xs font-bold text-navy flex items-center gap-1">
+              👁️ Sembunyikan / Tampilkan Kolom Tabel:
+            </span>
+            <div class="space-x-2 text-[11px] font-semibold">
+              <button type="button" onclick="toggleAllPreviewColumns(true)" class="text-blue-600 hover:underline">Tampilkan Semua</button>
+              <span class="text-gray-300">|</span>
+              <button type="button" onclick="toggleAllPreviewColumns(false)" class="text-red-500 hover:underline">Sembunyikan Semua</button>
+            </div>
+          </div>
+          <div id="columnToggleContainer" class="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
+          </div>
+        </div>
       </div>
 
       <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow" id="previewCanvasArea">
         <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0">
           <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT ABC</h2>
+            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">ABC</h2>
           </div>
 
           <table class="w-full text-[10px] text-center border-collapse mb-6">
@@ -174,29 +297,29 @@
             <h4 class="font-bold text-gray-800 mb-2">Informasi Pembayaran (Bank):</h4>
             <div id="bankContainer" class="space-y-2">
             </div>
-            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT ABC</span></p>
+            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">ABC</span></p>
           </div>
         </div>
       </div>
 
-      <div class="p-4 bg-gray-100 border-t flex justify-end space-x-3">
-        <button onclick="closePreviewModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Keluar Preview</button>
-        <button onclick="downloadAsImage()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow">Unduh Gambar</button>
+      <div class="p-3.5 sm:p-4 bg-gray-100 border-t flex justify-end space-x-2.5 sm:space-x-3 shrink-0">
+        <button onclick="closePreviewModal()" class="px-3.5 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Batal</button>
+        <button onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow">Unduh Gambar</button>
       </div>
     </div>
   </div>
 
   <div id="changePassModal" class="fixed inset-0 bg-black/50 hidden z-50 flex justify-center items-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-      <h3 class="font-bold text-gray-800 mb-4 text-center">Ubah Kata Sandi</h3>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6">
+      <h3 class="font-bold text-gray-800 mb-4 text-center text-sm sm:text-base">Ubah Kata Sandi</h3>
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Sandi Lama</label>
-          <input type="password" id="oldPass" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none">
+          <input type="password" id="oldPass" class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:outline-none">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Sandi Baru</label>
-          <input type="password" id="newPass" class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none">
+          <input type="password" id="newPass" class="w-full px-3 py-2 border rounded-lg text-xs sm:text-sm focus:outline-none">
         </div>
         <div id="changePassMsg" class="text-xs text-center hidden"></div>
       </div>
@@ -215,6 +338,26 @@
     let selectedEntities = new Set();
     let currentPreviewData = [];
     let isInvUser = false;
+    let hasSummaryAccess = false;
+    
+    let summaryResponseData = null;
+    let currentActiveTab = 1;
+    let myPieChartInstance = null;
+
+    const previewColumns = [
+      { key: 'noFaktur', label: 'No. Faktur' },
+      { key: 'tglFaktur', label: 'Tgl Faktur' },
+      { key: 'jatuhTempo', label: 'Jatuh Tempo' },
+      { key: 'nilaiFaktur', label: 'Nilai Faktur' },
+      { key: 'sisaPiutang', label: 'Sisa Piutang' },
+      { key: 'umurJt', label: 'Umur JT' },
+      { key: 'namaPelanggan', label: 'Nama Pelanggan' },
+      { key: 'namaPenjual', label: 'Nama Penjual' },
+      { key: 'namaKontak', label: 'Nama Kontak' },
+      { key: 'tanggalJt', label: 'Tanggal JT' }
+    ];
+
+    let columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
 
     window.onload = function() {
       const savedUser = localStorage.getItem('ptm_ar_user');
@@ -283,6 +426,14 @@
           rawARData = res.items || [];
           bankOptions = res.bankOptions || [];
           isInvUser = res.isInv || false;
+          hasSummaryAccess = res.hasSummaryAccess || false;
+
+          const btnSummary = document.getElementById('btnSummaryFeature');
+          if (hasSummaryAccess) {
+            btnSummary.classList.remove('hidden');
+          } else {
+            btnSummary.classList.add('hidden');
+          }
 
           const mainJtBox = document.getElementById('mainTotalJTContainer');
           const prevJtBox = document.getElementById('prevTotalJTContainer');
@@ -302,6 +453,169 @@
           alert('Gagal terhubung ke server: ' + err.message);
         })
         .getARData(currentUser);
+    }
+
+    function openSummaryModal() {
+      document.getElementById('summaryModal').classList.remove('hidden');
+      document.getElementById('summaryLoading').classList.remove('hidden');
+      document.getElementById('summaryContent').classList.add('hidden');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('summaryLoading').classList.add('hidden');
+          if (!res || !res.success) {
+            alert(res.message || 'Gagal mengambil data ringkasan.');
+            closeSummaryModal();
+            return;
+          }
+
+          summaryResponseData = res;
+          document.getElementById('summaryContent').classList.remove('hidden');
+          switchSummaryTab(1);
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('summaryLoading').classList.add('hidden');
+          alert('Terjadi kesalahan: ' + err.message);
+          closeSummaryModal();
+        })
+        .getSummaryData(currentUser);
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summaryModal').classList.add('hidden');
+    }
+
+    function switchSummaryTab(tabIndex) {
+      currentActiveTab = tabIndex;
+      const tabBtn1 = document.getElementById('tabBtn1');
+      const tabBtn2 = document.getElementById('tabBtn2');
+
+      if (tabIndex === 1) {
+        tabBtn1.className = 'flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-blue-600 text-blue-600 bg-white font-bold transition whitespace-nowrap';
+        tabBtn2.className = 'flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-transparent text-gray-500 hover:text-navy font-bold transition whitespace-nowrap';
+        document.getElementById('summarySectionTitle').innerText = '📋 Fitur 1: Kategori Berdasarkan Umur JT Asli Accurate';
+        document.getElementById('detailSectionTitle').innerText = 'Detail Piutang (Fitur 1 - Umur JT Asli Tertua)';
+      } else {
+        tabBtn2.className = 'flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-blue-600 text-blue-600 bg-white font-bold transition whitespace-nowrap';
+        tabBtn1.className = 'flex-1 min-w-[160px] py-2.5 px-3 sm:py-3 sm:px-4 text-center border-b-2 border-transparent text-gray-500 hover:text-navy font-bold transition whitespace-nowrap';
+        document.getElementById('summarySectionTitle').innerText = '📈 Fitur 2: Kategori Berdasarkan Hitungan Tgl Faktur - Hari Ini';
+        document.getElementById('detailSectionTitle').innerText = 'Detail Piutang (Fitur 2 - Hitungan Faktur Tertua)';
+      }
+
+      renderCurrentSummaryView();
+    }
+
+    function renderCurrentSummaryView() {
+      if (!summaryResponseData) return;
+
+      const activeFeatureData = (currentActiveTab === 1) 
+        ? summaryResponseData.feature1 
+        : summaryResponseData.feature2;
+
+      const bucketTbody = document.getElementById('summaryBucketTbody');
+      bucketTbody.innerHTML = '';
+
+      const orderedKeys = ['< 30 Hari', '0-30 Hari', '31-60 Hari', '61-90 Hari', '91-120 Hari', '> 120 Hari'];
+      
+      const pieLabels = [];
+      const pieDataValues = [];
+      const colors = ['#6b7280', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#881337'];
+
+      orderedKeys.forEach((key) => {
+        const b = activeFeatureData.buckets[key];
+        if (b) {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-100 transition border-b';
+          tr.innerHTML = `
+            <td class="p-2 border border-gray-200 font-bold text-gray-700 text-left">${b.label}</td>
+            <td class="p-2 border border-gray-200 font-semibold">${b.totalFaktur} lembar</td>
+            <td class="p-2 border border-gray-200 font-bold text-navy">Rp ${formatRupiah(b.totalPiutang)}</td>
+          `;
+          bucketTbody.appendChild(tr);
+
+          pieLabels.push(b.label);
+          pieDataValues.push(b.totalPiutang);
+        }
+      });
+
+      document.getElementById('sumTotalBucketFaktur').innerText = activeFeatureData.totals.totalFaktur + ' lembar';
+      document.getElementById('sumTotalBucketPiutang').innerText = 'Rp ' + formatRupiah(activeFeatureData.totals.totalPiutang);
+
+      renderPieChart(pieLabels, pieDataValues, colors);
+
+      const detailTbody = document.getElementById('summaryDetailTbody');
+      detailTbody.innerHTML = '';
+
+      const items = activeFeatureData.items || [];
+      document.getElementById('detailCountBadge').innerText = items.length + ' faktur';
+
+      if (items.length === 0) {
+        detailTbody.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-400">Tidak ada data piutang.</td></tr>';
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 transition border-b';
+        
+        const ageDisplay = (currentActiveTab === 1) 
+          ? item.umurJtStr 
+          : (item.umurFakturDays + ' hari');
+
+        tr.innerHTML = `
+          <td class="p-2 border border-gray-200 font-bold text-red-600 whitespace-nowrap">${ageDisplay}</td>
+          <td class="p-2 border border-gray-200 font-medium">${item.noPelanggan}</td>
+          <td class="p-2 border border-gray-200 font-semibold text-gray-800 text-left whitespace-nowrap">${item.namaPelanggan}</td>
+          <td class="p-2 border border-gray-200 font-semibold">${item.noFaktur}</td>
+          <td class="p-2 border border-gray-200 whitespace-nowrap">${item.tglFaktur}</td>
+          <td class="p-2 border border-gray-200 whitespace-nowrap">${item.jatuhTempo}</td>
+          <td class="p-2 border border-gray-200 font-medium text-gray-700 whitespace-nowrap">Rp ${formatRupiah(item.nilaiFaktur)}</td>
+          <td class="p-2 border border-gray-200 font-bold text-navy whitespace-nowrap">Rp ${formatRupiah(item.sisaPiutang)}</td>
+          <td class="p-2 border border-gray-200 text-gray-600 whitespace-nowrap">${item.namaPenjual}</td>
+          <td class="p-2 border border-gray-200 text-gray-600 text-left whitespace-nowrap">${item.namaKontak}</td>
+        `;
+        detailTbody.appendChild(tr);
+      });
+    }
+
+    function renderPieChart(labels, dataValues, bgColors) {
+      const ctx = document.getElementById('summaryPieChart').getContext('2d');
+
+      if (myPieChartInstance) {
+        myPieChartInstance.destroy();
+      }
+
+      myPieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: bgColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 10,
+                font: { size: 10 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw || 0;
+                  return context.label + ': Rp ' + formatRupiah(val);
+                }
+              }
+            }
+          }
+        }
+      });
     }
 
     function buildFilterEntities() {
@@ -330,7 +644,7 @@
       searchEntities.forEach((ent, index) => {
         const isChecked = selectedEntities.has(ent.label);
         const div = document.createElement('div');
-        div.className = 'flex items-center space-x-2 p-1 hover:bg-gray-100 rounded text-xs border-b border-gray-100 last:border-none min-w-max';
+        div.className = 'flex items-center space-x-2 p-1.5 hover:bg-gray-100 rounded text-xs border-b border-gray-100 last:border-none min-w-max';
         div.innerHTML = `
           <input type="checkbox" id="ent_${index}" ${isChecked ? 'checked' : ''} onchange="toggleFilterEntity('${ent.label}', this.checked)" class="rounded flex-shrink-0">
           <label for="ent_${index}" class="cursor-pointer font-medium text-gray-700 whitespace-nowrap">${ent.label}</label>
@@ -399,19 +713,19 @@
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50 transition';
         tr.innerHTML = `
-          <td class="p-3 text-center">
+          <td class="p-2.5 text-center">
             <input type="checkbox" class="row-checkbox" data-index="${idx}" onchange="updateCalculations()">
           </td>
-          <td class="p-3 text-center font-semibold text-gray-800">${item.noFaktur}</td>
-          <td class="p-3 text-center">${item.tglFaktur}</td>
-          <td class="p-3 text-center">${item.jatuhTempo}</td>
-          <td class="p-3 text-center font-medium">${formatRupiah(item.nilaiFaktur)}</td>
-          <td class="p-3 text-center font-semibold text-blue-900">${formatRupiah(item.sisaPiutang)}</td>
-          <td class="p-3 text-center">${item.umurJt}</td>
-          <td class="p-3 text-center font-medium">${item.namaPelanggan}</td>
-          <td class="p-3 text-center">${item.namaPenjual}</td>
-          <td class="p-3 text-center">${item.namaKontak}</td>
-          <td class="p-3 text-center">${item.tanggalJt}</td>
+          <td class="p-2.5 text-center font-semibold text-gray-800 whitespace-nowrap">${item.noFaktur}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.tglFaktur}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.jatuhTempo}</td>
+          <td class="p-2.5 text-center font-medium whitespace-nowrap">${formatRupiah(item.nilaiFaktur)}</td>
+          <td class="p-2.5 text-center font-semibold text-blue-900 whitespace-nowrap">${formatRupiah(item.sisaPiutang)}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.umurJt}</td>
+          <td class="p-2.5 text-center font-medium whitespace-nowrap">${item.namaPelanggan}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.namaPenjual}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.namaKontak}</td>
+          <td class="p-2.5 text-center whitespace-nowrap">${item.tanggalJt}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -510,6 +824,7 @@
 
         if (index > 0 && currentMonthYear && lastMonthYear && currentMonthYear !== lastMonthYear) {
           const emptyTr = document.createElement('tr');
+          emptyTr.className = 'month-separator-row';
           emptyTr.innerHTML = '<td colspan="10" class="py-2 bg-gray-50 border-y border-gray-200"></td>';
           previewTbody.appendChild(emptyTr);
         }
@@ -536,8 +851,77 @@
       document.getElementById('prevTotalSisa').innerText = 'Rp ' + formatRupiah(sumSisa);
       document.getElementById('prevTotalJT').innerText = hasJT ? 'Rp ' + formatRupiah(sumJT) : '-';
 
+      columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
+      renderColumnToggleCheckboxes();
+      applyColumnVisibility();
+
       renderBankOptions();
       document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function renderColumnToggleCheckboxes() {
+      const container = document.getElementById('columnToggleContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      previewColumns.forEach((col, idx) => {
+        const isChecked = columnVisibilityState[idx];
+        const label = document.createElement('label');
+        label.className = `flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
+          isChecked ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-gray-100 border-gray-300 text-gray-500'
+        }`;
+        label.innerHTML = `
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePreviewColumn(${idx}, this.checked)" class="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5">
+          <span>${col.label}</span>
+        `;
+        container.appendChild(label);
+      });
+    }
+
+    function togglePreviewColumn(index, isVisible) {
+      columnVisibilityState[index] = isVisible;
+      renderColumnToggleCheckboxes();
+      applyColumnVisibility();
+    }
+
+    function toggleAllPreviewColumns(status) {
+      columnVisibilityState = columnVisibilityState.map(() => status);
+      renderColumnToggleCheckboxes();
+      applyColumnVisibility();
+    }
+
+    function applyColumnVisibility() {
+      let visibleCount = 0;
+
+      const ths = document.querySelectorAll('#exportContainer table thead th');
+      ths.forEach((th, idx) => {
+        if (columnVisibilityState[idx]) {
+          th.style.display = '';
+          visibleCount++;
+        } else {
+          th.style.display = 'none';
+        }
+      });
+
+      const trs = document.querySelectorAll('#previewTableBody tr');
+      trs.forEach(tr => {
+        if (tr.classList.contains('month-separator-row')) {
+          const td = tr.querySelector('td');
+          if (td) {
+            td.colSpan = visibleCount || 1;
+            tr.style.display = visibleCount === 0 ? 'none' : '';
+          }
+        } else {
+          const tds = tr.children;
+          for (let i = 0; i < tds.length; i++) {
+            if (columnVisibilityState[i]) {
+              tds[i].style.display = '';
+            } else {
+              tds[i].style.display = 'none';
+            }
+          }
+        }
+      });
     }
 
     function renderBankOptions() {
