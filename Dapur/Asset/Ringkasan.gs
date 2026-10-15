@@ -119,6 +119,14 @@ function getSummaryData(username) {
     }
   });
 
+  var penjualMap = {};
+  userRows.forEach(function(item) {
+    if (item.namaPenjual && item.namaPenjual.trim() !== '') {
+      penjualMap[item.namaPenjual.trim()] = true;
+    }
+  });
+  var penjualList = Object.keys(penjualMap).sort();
+
   function buildBucketSummary(items, getDaysFn) {
     var buckets = {
       '< 30 Hari': { label: '< 30 Hari', totalFaktur: 0, totalPiutang: 0 },
@@ -189,6 +197,7 @@ function getSummaryData(username) {
 
   return {
     success: true,
+    penjualList: penjualList,
     feature1: {
       items: feature1List,
       buckets: feature1Summary.buckets,
@@ -205,7 +214,7 @@ function getSummaryData(username) {
 function formatDate(val) {
   if (!val) return '';
   if (val instanceof Date) {
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
     return val.getDate() + ' ' + months[val.getMonth()] + ' ' + val.getFullYear();
   }
   return String(val);

@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="utf-8">
-  <title>Site AR - PT ABC</title>
+  <title>Site AR - ABC</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,7 +23,7 @@
       <div class="text-center mb-6">
         <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" alt="Logo" class="h-14 sm:h-16 mx-auto mb-3 object-contain">
         <h2 class="text-lg sm:text-xl font-bold text-gray-800">Sistem Informasi AR</h2>
-        <p class="text-xs sm:text-sm text-gray-500">PT ABC</p>
+        <p class="text-xs sm:text-sm text-gray-500">ABC</p>
       </div>
 
       <form id="loginForm" onsubmit="handleLogin(event)">
@@ -48,7 +48,7 @@
       <div class="max-w-7xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2">
         <div class="flex items-center space-x-2">
           <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" class="h-7 sm:h-8 object-contain bg-white rounded p-1">
-          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">PT ABC</span>
+          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">ABC</span>
         </div>
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button id="btnSummaryFeature" onclick="openSummaryModal()" class="hidden text-[11px] sm:text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
@@ -156,12 +156,24 @@
         </button>
       </div>
 
-      <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-6">
+      <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-5">
         <div id="summaryLoading" class="text-center py-12 text-gray-500 font-semibold">
           ⏳ Memuat data ringkasan piutang...
         </div>
 
-        <div id="summaryContent" class="hidden space-y-6">
+        <div id="summaryContent" class="hidden space-y-5">
+          <div id="penjualSummaryFilterBox" class="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+            <div class="flex flex-wrap items-center space-x-2 gap-y-1">
+              <label for="selectPenjualSummary" class="text-xs sm:text-sm font-bold text-navy whitespace-nowrap">👤 Filter Nama Penjual:</label>
+              <select id="selectPenjualSummary" onchange="handlePenjualFilterChange(this.value)" class="text-xs sm:text-sm bg-white border border-blue-300 rounded-xl px-3 py-1.5 font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">-- Semua Penjual (Semua Data) --</option>
+              </select>
+            </div>
+            <span id="penjualSummaryInfo" class="text-[11px] sm:text-xs text-blue-900 font-medium italic">
+              Menampilkan semua data penjual.
+            </span>
+          </div>
+
           <div class="bg-gray-50 rounded-2xl p-3.5 sm:p-5 border border-gray-200">
             <h4 id="summarySectionTitle" class="font-bold text-gray-800 text-xs sm:text-base mb-3 sm:mb-4 border-b pb-2 text-navy">
               Analisis Rentang Umur
@@ -263,7 +275,7 @@
       <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow" id="previewCanvasArea">
         <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0">
           <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT ABC</h2>
+            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">ABC</h2>
             <p id="prevWaktuPembaruan" class="text-xs text-gray-500 font-medium mt-1">Pembaruan Data: -</p>
           </div>
 
@@ -300,7 +312,7 @@
             <h4 class="font-bold text-gray-800 mb-2">Informasi Pembayaran (Bank):</h4>
             <div id="bankContainer" class="space-y-2">
             </div>
-            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT ABC</span></p>
+            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">ABC</span></p>
           </div>
         </div>
       </div>
@@ -347,6 +359,7 @@
     let summaryResponseData = null;
     let currentActiveTab = 1;
     let myPieChartInstance = null;
+    let selectedPenjualSummary = '';
 
     const previewColumns = [
       { key: 'noFaktur', label: 'No. Faktur' },
@@ -480,6 +493,10 @@
           }
 
           summaryResponseData = res;
+          selectedPenjualSummary = '';
+          
+          populatePenjualFilterDropdown(res.penjualList || []);
+
           document.getElementById('summaryContent').classList.remove('hidden');
           switchSummaryTab(1);
         })
@@ -493,6 +510,47 @@
 
     function closeSummaryModal() {
       document.getElementById('summaryModal').classList.add('hidden');
+    }
+
+    function populatePenjualFilterDropdown(penjualList) {
+      const select = document.getElementById('selectPenjualSummary');
+      if (!select) return;
+
+      select.innerHTML = '<option value="">-- Semua Penjual (Semua Data) --</option>';
+
+      penjualList.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        select.appendChild(opt);
+      });
+
+      const infoEl = document.getElementById('penjualSummaryInfo');
+      if (infoEl) {
+        if (penjualList.length > 1) {
+          infoEl.innerText = `Terdeteksi ${penjualList.length} penjual. Menampilkan semua data.`;
+        } else if (penjualList.length === 1) {
+          infoEl.innerText = `Terdeteksi 1 penjual (${penjualList[0]}).`;
+        } else {
+          infoEl.innerText = 'Tidak ada nama penjual terdeteksi.';
+        }
+      }
+    }
+
+    function handlePenjualFilterChange(val) {
+      selectedPenjualSummary = String(val || '').trim();
+      
+      const infoEl = document.getElementById('penjualSummaryInfo');
+      if (infoEl) {
+        if (selectedPenjualSummary) {
+          infoEl.innerText = `Filter Aktif: ${selectedPenjualSummary}`;
+        } else {
+          const totalPenjual = summaryResponseData && summaryResponseData.penjualList ? summaryResponseData.penjualList.length : 0;
+          infoEl.innerText = totalPenjual > 1 ? `Terdeteksi ${totalPenjual} penjual. Menampilkan semua data.` : 'Menampilkan semua data.';
+        }
+      }
+
+      renderCurrentSummaryView();
     }
 
     function switchSummaryTab(tabIndex) {
@@ -515,12 +573,64 @@
       renderCurrentSummaryView();
     }
 
+    function calculateClientBuckets(items, isFeature1) {
+      const buckets = {
+        '< 30 Hari': { label: '< 30 Hari', totalFaktur: 0, totalPiutang: 0 },
+        '0-30 Hari': { label: '0 - 30 Hari', totalFaktur: 0, totalPiutang: 0 },
+        '31-60 Hari': { label: '31 - 60 Hari', totalFaktur: 0, totalPiutang: 0 },
+        '61-90 Hari': { label: '61 - 90 Hari', totalFaktur: 0, totalPiutang: 0 },
+        '91-120 Hari': { label: '91 - 120 Hari', totalFaktur: 0, totalPiutang: 0 },
+        '> 120 Hari': { label: '> 120 Hari', totalFaktur: 0, totalPiutang: 0 }
+      };
+
+      items.forEach(function(item) {
+        const days = isFeature1 ? item.umurJtNum : item.umurFakturDays;
+        if (days < 0) {
+          buckets['< 30 Hari'].totalFaktur++;
+          buckets['< 30 Hari'].totalPiutang += item.sisaPiutang;
+        } else if (days >= 0 && days <= 30) {
+          buckets['0-30 Hari'].totalFaktur++;
+          buckets['0-30 Hari'].totalPiutang += item.sisaPiutang;
+        } else if (days >= 31 && days <= 60) {
+          buckets['31-60 Hari'].totalFaktur++;
+          buckets['31-60 Hari'].totalPiutang += item.sisaPiutang;
+        } else if (days >= 61 && days <= 90) {
+          buckets['61-90 Hari'].totalFaktur++;
+          buckets['61-90 Hari'].totalPiutang += item.sisaPiutang;
+        } else if (days >= 91 && days <= 120) {
+          buckets['91-120 Hari'].totalFaktur++;
+          buckets['91-120 Hari'].totalPiutang += item.sisaPiutang;
+        } else if (days > 120) {
+          buckets['> 120 Hari'].totalFaktur++;
+          buckets['> 120 Hari'].totalPiutang += item.sisaPiutang;
+        }
+      });
+
+      let totalFaktur = 0;
+      let totalPiutang = 0;
+      Object.keys(buckets).forEach(function(k) {
+        totalFaktur += buckets[k].totalFaktur;
+        totalPiutang += buckets[k].totalPiutang;
+      });
+
+      return {
+        buckets: buckets,
+        totals: { totalFaktur: totalFaktur, totalPiutang: totalPiutang }
+      };
+    }
+
     function renderCurrentSummaryView() {
       if (!summaryResponseData) return;
 
-      const activeFeatureData = (currentActiveTab === 1) 
-        ? summaryResponseData.feature1 
-        : summaryResponseData.feature2;
+      const isFeature1 = (currentActiveTab === 1);
+      const rawFeatureData = isFeature1 ? summaryResponseData.feature1 : summaryResponseData.feature2;
+
+      let items = rawFeatureData.items || [];
+      if (selectedPenjualSummary !== '') {
+        items = items.filter(item => String(item.namaPenjual || '').trim().toUpperCase() === selectedPenjualSummary.toUpperCase());
+      }
+
+      const activeFeatureData = calculateClientBuckets(items, isFeature1);
 
       const bucketTbody = document.getElementById('summaryBucketTbody');
       bucketTbody.innerHTML = '';
@@ -556,11 +666,10 @@
       const detailTbody = document.getElementById('summaryDetailTbody');
       detailTbody.innerHTML = '';
 
-      const items = activeFeatureData.items || [];
       document.getElementById('detailCountBadge').innerText = items.length + ' faktur';
 
       if (items.length === 0) {
-        detailTbody.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-400">Tidak ada data piutang.</td></tr>';
+        detailTbody.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-400">Tidak ada data piutang untuk filter penjual ini.</td></tr>';
         return;
       }
 
@@ -568,7 +677,7 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-gray-50 transition border-b';
         
-        const ageDisplay = (currentActiveTab === 1) 
+        const ageDisplay = isFeature1 
           ? item.umurJtStr 
           : (item.umurFakturDays + ' hari');
 
