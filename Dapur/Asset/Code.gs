@@ -1,7 +1,7 @@
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
-    .setTitle('Site AR - ABC')
+    .setTitle('Site AR - PT PRIMA TUNGGAL MANDIRI')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -67,6 +67,7 @@ function getARData(username) {
   var userGrup4 = '';
   var userHari = '';
   var hasSummaryAccess = false;
+  var hasWatchlistAccess = false;
   
   var cleanUsername = String(username || '').trim().toUpperCase();
 
@@ -82,6 +83,9 @@ function getARData(username) {
       
       var ringkasanVal = String(confData[i][7] || '').trim().toUpperCase();
       hasSummaryAccess = (ringkasanVal === 'YA');
+
+      var watchlistVal = String(confData[i][8] || '').trim().toUpperCase();
+      hasWatchlistAccess = (watchlistVal === 'YA');
       break;
     }
   }
@@ -222,8 +226,8 @@ function getARData(username) {
   
   var bankMap = {};
   for (var b = 1; b < confData.length; b++) {
-    var depoCode = String(confData[b][8] || '').trim();
-    var bankInfo = String(confData[b][9] || '').trim();
+    var depoCode = String(confData[b][9] || '').trim();
+    var bankInfo = String(confData[b][10] || '').trim();
     if (depoCode && bankInfo) {
       if (!bankMap[depoCode]) bankMap[depoCode] = [];
       if (bankMap[depoCode].indexOf(bankInfo) === -1) {
@@ -264,6 +268,7 @@ function getARData(username) {
     bankOptions: bankOptions,
     isInv: isInv,
     hasSummaryAccess: hasSummaryAccess,
+    hasWatchlistAccess: hasWatchlistAccess,
     waktuPembaruan: waktuPembaruan
   };
 }

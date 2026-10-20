@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="utf-8">
-  <title>Site AR - ABC</title>
+  <title>Site AR - PT PRIMA TUNGGAL MANDIRI</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -11,19 +11,33 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
+    body { 
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
     .bg-navy { background-color: #0b2545; }
     .text-navy { color: #0b2545; }
+
+    .safe-bottom {
+      padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-consistent-h {
+      height: 90vh;
+      height: 90dvh;
+      max-height: 90vh;
+      max-height: 90dvh;
+    }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen">
+<body class="bg-gray-100 text-gray-800">
 
   <div id="loginSection" class="flex flex-col justify-center items-center min-h-screen px-4">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
       <div class="text-center mb-6">
         <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" alt="Logo" class="h-14 sm:h-16 mx-auto mb-3 object-contain">
         <h2 class="text-lg sm:text-xl font-bold text-gray-800">Sistem Informasi AR</h2>
-        <p class="text-xs sm:text-sm text-gray-500">ABC</p>
+        <p class="text-xs sm:text-sm text-gray-500">PT PRIMA TUNGGAL MANDIRI</p>
       </div>
 
       <form id="loginForm" onsubmit="handleLogin(event)">
@@ -48,9 +62,12 @@
       <div class="max-w-7xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2">
         <div class="flex items-center space-x-2">
           <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" class="h-7 sm:h-8 object-contain bg-white rounded p-1">
-          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">ABC</span>
+          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">PT PRIMA TUNGGAL MANDIRI</span>
         </div>
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <button id="btnWatchlistFeature" onclick="openWatchlistModal()" class="hidden text-[11px] sm:text-xs bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
+            📌 Watchlist
+          </button>
           <button id="btnSummaryFeature" onclick="openSummaryModal()" class="hidden text-[11px] sm:text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
             📊 Ringkasan
           </button>
@@ -61,8 +78,8 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-48 sm:pb-32 flex-grow w-full">
-      <div class="bg-white rounded-2xl shadow-md p-4 sm:p-5 mb-5 border border-gray-100">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 pt-3.5 sm:pt-6 pb-36 sm:pb-28 flex-grow w-full">
+      <div class="bg-white rounded-2xl shadow-md p-3.5 sm:p-5 mb-4 sm:mb-5 border border-gray-100">
         <label class="block text-xs sm:text-sm font-bold text-gray-700 mb-2">🔍 Cari & Pilih (No. Pelanggan / Nama Pelanggan / Nama Kontak):</label>
         
         <div class="relative">
@@ -81,7 +98,7 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-6">
+      <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-4">
         <div class="p-3.5 sm:p-4 bg-gray-50 border-b flex justify-between items-center">
           <div>
             <h3 class="font-bold text-xs sm:text-sm text-gray-700">Daftar Piutang / AR</h3>
@@ -115,31 +132,141 @@
       </div>
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl p-2.5 sm:p-4 z-10">
-      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4">
-        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-sm font-semibold w-full md:w-auto">
-          <div class="bg-blue-50 text-blue-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-blue-200 text-center sm:text-left">
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl px-3 pt-2 sm:p-3.5 safe-bottom z-10">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-1.5 sm:gap-4">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-3 text-[11px] sm:text-sm font-semibold w-full md:w-auto">
+          <div class="bg-blue-50 text-blue-900 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-blue-200 text-center sm:text-left leading-tight">
             <span class="text-gray-500 block text-[10px] sm:hidden">Nilai Faktur</span>
             Total Nilai: <span id="sumNilaiFaktur" class="font-bold block sm:inline">Rp 0</span>
           </div>
-          <div class="bg-amber-50 text-amber-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-amber-200 text-center sm:text-left">
+          <div class="bg-amber-50 text-amber-900 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-amber-200 text-center sm:text-left leading-tight">
             <span class="text-gray-500 block text-[10px] sm:hidden">Sisa Piutang</span>
             Total Sisa: <span id="sumSisaPiutang" class="font-bold block sm:inline">Rp 0</span>
           </div>
-          <div id="mainTotalJTContainer" class="col-span-2 sm:col-span-1 bg-red-50 text-red-900 p-2 sm:px-3 sm:py-2 rounded-xl border border-red-200 text-center sm:text-left">
+          <div id="mainTotalJTContainer" class="col-span-2 sm:col-span-1 bg-red-50 text-red-900 px-2.5 py-1 sm:px-3 sm:py-2 rounded-xl border border-red-200 text-center sm:text-left leading-tight">
             Total Piutang JT: <span id="sumPiutangJT" class="font-bold">-</span>
           </div>
         </div>
 
-        <button onclick="openPreviewModal()" id="btnPreview" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition">
+        <button onclick="openPreviewModal()" id="btnPreview" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition">
           Preview Pilihan Data
         </button>
       </div>
     </div>
   </div>
 
-  <div id="summaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden relative">
+  <div id="watchlistModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-consistent-h flex flex-col overflow-hidden relative">
+      <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
+        <div>
+          <h3 class="font-bold text-sm sm:text-lg flex items-center gap-2">
+            📌 Daftar Pantauan Piutang (Watchlist)
+          </h3>
+          <p class="text-[10px] sm:text-xs text-blue-200 mt-0.5">Disortir otomatis berdasarkan No. Faktur terlama & tersimpan di perangkat ini</p>
+        </div>
+        <button onclick="closeWatchlistModal()" class="text-white hover:text-gray-300 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="p-3 sm:p-5 overflow-y-auto flex-grow space-y-4">
+        
+        <div id="watchlistLoading" class="text-center py-12 text-gray-500 font-semibold hidden">
+          ⏳ Memuat data Watchlist...
+        </div>
+
+        <div id="watchlistContent" class="hidden space-y-4">
+          <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3 sm:p-4 shadow-sm">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+              <button type="button" onclick="toggleWatchlistSelectorPanel()" class="text-xs sm:text-sm font-bold text-navy flex items-center gap-1.5 hover:underline">
+                <span id="watchlistSelectorToggleIcon">▼</span>
+                <span>🔍 Pilih / Tandai Pelanggan Watchlist</span>
+                <span id="watchlistSelectedBadge" class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full">0 dipilih</span>
+              </button>
+
+              <div class="flex items-center gap-1.5 sm:gap-2">
+                <button type="button" onclick="exportWatchlistData()" class="text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                  📤 Export
+                </button>
+                <button type="button" onclick="triggerImportWatchlist()" class="text-[11px] sm:text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                  📥 Import
+                </button>
+                <input type="file" id="watchlistImportFileInput" accept=".json,application/json" class="hidden" onchange="importWatchlistData(event)">
+              </div>
+            </div>
+
+            <div id="watchlistSelectorBody" class="space-y-2">
+              <input type="text" id="watchlistSearchInput" onkeyup="filterWatchlistDropdown()" placeholder="Ketik No. Pelanggan / Nama Pelanggan / Nama Kontak..." class="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              
+              <div id="watchlistDropdown" class="max-h-36 sm:max-h-44 overflow-auto border border-indigo-100 rounded-xl p-2 bg-white space-y-1">
+              </div>
+
+              <div class="flex flex-wrap justify-between items-center text-[11px] sm:text-xs text-gray-600 pt-1 gap-2">
+                <span id="watchlistEntityCountInfo">0 dari 0 entitas ditandai</span>
+                <div class="space-x-2">
+                  <button type="button" onclick="selectAllWatchlistEntities(true)" class="text-indigo-600 hover:underline font-semibold">Tandai Semua</button>
+                  <span class="text-gray-300">|</span>
+                  <button type="button" onclick="selectAllWatchlistEntities(false)" class="text-red-500 hover:underline font-semibold">Bersihkan Watchlist</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-2 sm:p-3">
+              <span class="block text-[10px] sm:text-xs text-gray-500 font-medium">Total Faktur</span>
+              <span id="wlTotalFaktur" class="font-bold text-xs sm:text-base text-navy">0 lembar</span>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-2 sm:p-3">
+              <span class="block text-[10px] sm:text-xs text-gray-500 font-medium">Total Nilai Faktur</span>
+              <span id="wlTotalNilai" class="font-bold text-xs sm:text-base text-blue-900">Rp 0</span>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2 sm:p-3">
+              <span class="block text-[10px] sm:text-xs text-gray-500 font-medium">Total Sisa Piutang</span>
+              <span id="wlTotalSisa" class="font-bold text-xs sm:text-base text-amber-900">Rp 0</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-3 sm:p-3.5 bg-gray-50 border-b flex flex-wrap justify-between items-center gap-2">
+              <h4 class="font-bold text-xs sm:text-sm text-navy">
+                📋 Daftar Faktur Terpantau (Urut No. Faktur Terlama)
+              </h4>
+              <span class="text-[10px] sm:text-xs text-gray-500 italic">Geser tabel ke kanan/kiri untuk melihat seluruh kolom &rarr;</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-80 sm:max-h-96 overflow-y-auto">
+              <table class="w-full text-[11px] sm:text-xs text-center border-collapse">
+                <thead class="bg-navy text-white sticky top-0 uppercase text-[10px] sm:text-[11px] z-10">
+                  <tr>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">No. Faktur ▲</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Tgl Faktur</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Jatuh Tempo</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Nilai Faktur</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Sisa Piutang</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Umur JT</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">No. Pelanggan</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Nama Pelanggan</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Nama Penjual</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Nama Kontak</th>
+                    <th class="p-2.5 border border-blue-900 whitespace-nowrap">Tanggal JT</th>
+                  </tr>
+                </thead>
+                <tbody id="watchlistTableBody" class="divide-y divide-gray-200 text-gray-700">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-3 sm:p-4 bg-gray-100 border-t flex justify-end shrink-0">
+        <button onclick="closeWatchlistModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded-xl shadow">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="summaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-consistent-h flex flex-col overflow-hidden relative">
       <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
         <h3 class="font-bold text-sm sm:text-lg flex items-center gap-2">
           📊 Ringkasan Analisis Piutang
@@ -242,40 +369,42 @@
         </div>
       </div>
 
-      <div class="p-3.5 sm:p-4 bg-gray-100 border-t flex justify-end shrink-0">
+      <div class="p-3 sm:p-4 bg-gray-100 border-t flex justify-end shrink-0">
         <button onclick="closeSummaryModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded-xl shadow">Tutup</button>
       </div>
     </div>
   </div>
 
-  <div id="previewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
-      <div class="p-3.5 sm:p-4 bg-gray-100 border-b flex justify-between items-center shrink-0">
+  <div id="previewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-consistent-h flex flex-col overflow-hidden">
+      <div class="p-3 sm:p-4 bg-gray-100 border-b flex justify-between items-center shrink-0">
         <h3 class="font-bold text-xs sm:text-base text-gray-800">Pratinjau & Unduh File Gambar</h3>
-        <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-800 text-xl font-bold">&times;</button>
+        <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-800 text-xl font-bold leading-none">&times;</button>
       </div>
 
-      <div class="px-3 py-2.5 sm:px-6 sm:pt-4 bg-white border-b border-gray-100 shrink-0">
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 sm:p-3.5">
-          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
-            <span class="text-xs font-bold text-navy flex items-center gap-1">
-              👁️ Sembunyikan / Tampilkan Kolom Tabel:
-            </span>
+      <div class="px-3 py-2 sm:px-6 sm:py-3 bg-white border-b border-gray-100 shrink-0">
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 sm:p-3">
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <button type="button" onclick="togglePreviewColumnBox()" class="text-xs font-bold text-navy flex items-center gap-1.5 hover:underline">
+              <span id="previewColToggleIcon">▶</span>
+              <span>👁️ Sembunyikan / Tampilkan Kolom Tabel</span>
+              <span id="previewColCountBadge" class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-semibold">10/10 tampil</span>
+            </button>
             <div class="space-x-2 text-[11px] font-semibold">
               <button type="button" onclick="toggleAllPreviewColumns(true)" class="text-blue-600 hover:underline">Tampilkan Semua</button>
               <span class="text-gray-300">|</span>
               <button type="button" onclick="toggleAllPreviewColumns(false)" class="text-red-500 hover:underline">Sembunyikan Semua</button>
             </div>
           </div>
-          <div id="columnToggleContainer" class="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
+          <div id="columnToggleContainer" class="hidden flex-wrap gap-1.5 sm:gap-2 text-xs mt-2.5 pt-2.5 border-t border-gray-200">
           </div>
         </div>
       </div>
 
-      <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow" id="previewCanvasArea">
-        <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0">
+      <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow bg-gray-50/50" id="previewCanvasArea">
+        <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0 shadow-sm">
           <div class="text-center mb-6">
-            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">ABC</h2>
+            <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT PRIMA TUNGGAL MANDIRI</h2>
             <p id="prevWaktuPembaruan" class="text-xs text-gray-500 font-medium mt-1">Pembaruan Data: -</p>
           </div>
 
@@ -312,12 +441,12 @@
             <h4 class="font-bold text-gray-800 mb-2">Informasi Pembayaran (Bank):</h4>
             <div id="bankContainer" class="space-y-2">
             </div>
-            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">ABC</span></p>
+            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT PRIMA TUNGGAL MANDIRI</span></p>
           </div>
         </div>
       </div>
 
-      <div class="p-3.5 sm:p-4 bg-gray-100 border-t flex justify-end space-x-2.5 sm:space-x-3 shrink-0">
+      <div class="p-3 sm:p-4 bg-gray-100 border-t flex justify-end space-x-2.5 sm:space-x-3 shrink-0">
         <button onclick="closePreviewModal()" class="px-3.5 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Batal</button>
         <button onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow">Unduh Gambar</button>
       </div>
@@ -354,8 +483,14 @@
     let currentPreviewData = [];
     let isInvUser = false;
     let hasSummaryAccess = false;
+    let hasWatchlistAccess = false;
     let waktuPembaruanData = '-';
     
+    let watchlistRawItems = [];
+    let watchlistAvailableEntities = [];
+    let watchlistSelectedEntities = new Set();
+    let isWatchlistSelectorOpen = true;
+
     let summaryResponseData = null;
     let currentActiveTab = 1;
     let myPieChartInstance = null;
@@ -375,6 +510,7 @@
     ];
 
     let columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
+    let isPreviewColumnBoxOpen = false;
 
     window.onload = function() {
       const savedUser = localStorage.getItem('ptm_ar_user');
@@ -444,6 +580,7 @@
           bankOptions = res.bankOptions || [];
           isInvUser = res.isInv || false;
           hasSummaryAccess = res.hasSummaryAccess || false;
+          hasWatchlistAccess = res.hasWatchlistAccess || false;
 
           waktuPembaruanData = res.waktuPembaruan || '-';
           const displayEl = document.getElementById('displayWaktuPembaruan');
@@ -456,6 +593,13 @@
             btnSummary.classList.remove('hidden');
           } else {
             btnSummary.classList.add('hidden');
+          }
+
+          const btnWatchlist = document.getElementById('btnWatchlistFeature');
+          if (hasWatchlistAccess) {
+            btnWatchlist.classList.remove('hidden');
+          } else {
+            btnWatchlist.classList.add('hidden');
           }
 
           const mainJtBox = document.getElementById('mainTotalJTContainer');
@@ -476,6 +620,298 @@
           alert('Gagal terhubung ke server: ' + err.message);
         })
         .getARData(currentUser);
+    }
+
+    function getWatchlistStorageKey() {
+      return 'ptm_ar_watchlist_' + String(currentUser || '').trim().toUpperCase();
+    }
+
+    function loadWatchlistFromStorage() {
+      watchlistSelectedEntities = new Set();
+      try {
+        const saved = localStorage.getItem(getWatchlistStorageKey());
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(item => watchlistSelectedEntities.add(String(item)));
+          }
+        }
+      } catch (e) {
+        console.error('Gagal memuat data Watchlist dari storage:', e);
+      }
+    }
+
+    function saveWatchlistToStorage() {
+      try {
+        const arr = Array.from(watchlistSelectedEntities);
+        localStorage.setItem(getWatchlistStorageKey(), JSON.stringify(arr));
+      } catch (e) {
+        console.error('Gagal menyimpan data Watchlist ke storage:', e);
+      }
+    }
+
+    function openWatchlistModal() {
+      document.getElementById('watchlistModal').classList.remove('hidden');
+      document.getElementById('watchlistLoading').classList.remove('hidden');
+      document.getElementById('watchlistContent').classList.add('hidden');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('watchlistLoading').classList.add('hidden');
+          if (!res || !res.success) {
+            alert(res.message || 'Gagal mengambil data Watchlist.');
+            closeWatchlistModal();
+            return;
+          }
+
+          watchlistRawItems = res.items || [];
+          watchlistAvailableEntities = res.entities || [];
+
+          loadWatchlistFromStorage();
+          document.getElementById('watchlistSearchInput').value = '';
+          renderWatchlistDropdown();
+          renderWatchlistTable();
+
+          document.getElementById('watchlistContent').classList.remove('hidden');
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('watchlistLoading').classList.add('hidden');
+          alert('Terjadi kesalahan saat memuat Watchlist: ' + err.message);
+          closeWatchlistModal();
+        })
+        .getWatchlistData(currentUser);
+    }
+
+    function closeWatchlistModal() {
+      document.getElementById('watchlistModal').classList.add('hidden');
+    }
+
+    function toggleWatchlistSelectorPanel() {
+      isWatchlistSelectorOpen = !isWatchlistSelectorOpen;
+      const body = document.getElementById('watchlistSelectorBody');
+      const icon = document.getElementById('watchlistSelectorToggleIcon');
+      if (isWatchlistSelectorOpen) {
+        body.classList.remove('hidden');
+        icon.innerText = '▼';
+      } else {
+        body.classList.add('hidden');
+        icon.innerText = '▶';
+      }
+    }
+
+    function renderWatchlistDropdown() {
+      const dropdown = document.getElementById('watchlistDropdown');
+      if (!dropdown) return;
+      dropdown.innerHTML = '';
+
+      if (watchlistAvailableEntities.length === 0) {
+        dropdown.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">Tidak ada entitas pelanggan tersedia.</div>';
+        updateWatchlistCountInfo();
+        return;
+      }
+
+      watchlistAvailableEntities.forEach((ent, index) => {
+        const isChecked = watchlistSelectedEntities.has(ent.label);
+        const div = document.createElement('div');
+        div.className = 'flex items-center space-x-2 p-1.5 hover:bg-indigo-50/60 rounded text-xs border-b border-gray-100 last:border-none min-w-max';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = 'wl_ent_' + index;
+        cb.checked = isChecked;
+        cb.className = 'rounded text-indigo-600 focus:ring-indigo-500 flex-shrink-0 cursor-pointer';
+        cb.onchange = function() {
+          toggleWatchlistEntity(ent.label, this.checked);
+        };
+
+        const lbl = document.createElement('label');
+        lbl.htmlFor = 'wl_ent_' + index;
+        lbl.className = 'cursor-pointer font-medium text-gray-700 whitespace-nowrap select-none';
+        lbl.textContent = ent.label;
+
+        div.appendChild(cb);
+        div.appendChild(lbl);
+        dropdown.appendChild(div);
+      });
+
+      updateWatchlistCountInfo();
+      filterWatchlistDropdown();
+    }
+
+    function filterWatchlistDropdown() {
+      const q = (document.getElementById('watchlistSearchInput').value || '').toLowerCase();
+      const dropdown = document.getElementById('watchlistDropdown');
+      if (!dropdown) return;
+      const items = dropdown.children;
+
+      for (let i = 0; i < watchlistAvailableEntities.length; i++) {
+        if (!items[i]) continue;
+        const ent = watchlistAvailableEntities[i];
+        if (ent.label.toLowerCase().includes(q)) {
+          items[i].style.display = 'flex';
+        } else {
+          items[i].style.display = 'none';
+        }
+      }
+    }
+
+    function toggleWatchlistEntity(label, isChecked) {
+      if (isChecked) {
+        watchlistSelectedEntities.add(label);
+      } else {
+        watchlistSelectedEntities.delete(label);
+      }
+      saveWatchlistToStorage();
+      updateWatchlistCountInfo();
+      renderWatchlistTable();
+    }
+
+    function selectAllWatchlistEntities(status) {
+      if (status) {
+        watchlistAvailableEntities.forEach(e => watchlistSelectedEntities.add(e.label));
+      } else {
+        watchlistSelectedEntities.clear();
+      }
+      saveWatchlistToStorage();
+      renderWatchlistDropdown();
+      renderWatchlistTable();
+    }
+
+    function updateWatchlistCountInfo() {
+      const validSelectedCount = watchlistAvailableEntities.filter(e => watchlistSelectedEntities.has(e.label)).length;
+      const infoEl = document.getElementById('watchlistEntityCountInfo');
+      const badgeEl = document.getElementById('watchlistSelectedBadge');
+      if (infoEl) {
+        infoEl.innerText = `${validSelectedCount} dari ${watchlistAvailableEntities.length} entitas ditandai`;
+      }
+      if (badgeEl) {
+        badgeEl.innerText = `${validSelectedCount} dipilih`;
+      }
+    }
+
+    function renderWatchlistTable() {
+      const tbody = document.getElementById('watchlistTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const wlItems = watchlistRawItems.filter(item => {
+        const key = `${item.noPelanggan} | ${item.namaPelanggan} | ${item.namaKontak}`;
+        return watchlistSelectedEntities.has(key);
+      });
+
+      wlItems.sort((a, b) => {
+        const cmpFaktur = String(a.noFaktur || '').localeCompare(String(b.noFaktur || ''), undefined, { numeric: true, sensitivity: 'base' });
+        if (cmpFaktur !== 0) return cmpFaktur;
+        return String(a.namaPelanggan || '').localeCompare(String(b.namaPelanggan || ''));
+      });
+
+      let sumNilai = 0;
+      let sumSisa = 0;
+      wlItems.forEach(item => {
+        sumNilai += item.nilaiFaktur;
+        sumSisa += item.sisaPiutang;
+      });
+
+      document.getElementById('wlTotalFaktur').innerText = wlItems.length + ' lembar';
+      document.getElementById('wlTotalNilai').innerText = 'Rp ' + formatRupiah(sumNilai);
+      document.getElementById('wlTotalSisa').innerText = 'Rp ' + formatRupiah(sumSisa);
+
+      if (wlItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="p-6 text-center text-gray-400">Belum ada pelanggan yang ditandai di Watchlist, atau pelanggan yang ditandai tidak memiliki tagihan aktif.</td></tr>';
+        return;
+      }
+
+      wlItems.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-indigo-50/40 transition border-b';
+        tr.innerHTML = `
+          <td class="p-2 border border-gray-200 font-bold text-indigo-900 whitespace-nowrap">${item.noFaktur}</td>
+          <td class="p-2 border border-gray-200 whitespace-nowrap">${item.tglFaktur}</td>
+          <td class="p-2 border border-gray-200 whitespace-nowrap">${item.jatuhTempo}</td>
+          <td class="p-2 border border-gray-200 font-medium whitespace-nowrap">Rp ${formatRupiah(item.nilaiFaktur)}</td>
+          <td class="p-2 border border-gray-200 font-bold text-navy whitespace-nowrap">Rp ${formatRupiah(item.sisaPiutang)}</td>
+          <td class="p-2 border border-gray-200 font-semibold text-red-600 whitespace-nowrap">${item.umurJt}</td>
+          <td class="p-2 border border-gray-200 font-medium whitespace-nowrap">${item.noPelanggan}</td>
+          <td class="p-2 border border-gray-200 font-semibold text-gray-800 text-left whitespace-nowrap">${item.namaPelanggan}</td>
+          <td class="p-2 border border-gray-200 text-gray-600 whitespace-nowrap">${item.namaPenjual}</td>
+          <td class="p-2 border border-gray-200 text-gray-600 text-left whitespace-nowrap">${item.namaKontak}</td>
+          <td class="p-2 border border-gray-200 whitespace-nowrap">${item.tanggalJt}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportWatchlistData() {
+      const listArray = Array.from(watchlistSelectedEntities);
+      if (listArray.length === 0) {
+        alert('Daftar Watchlist masih kosong! Silakan tandai pelanggan terlebih dahulu sebelum melakukan Export.');
+        return;
+      }
+
+      const payload = {
+        app: 'PTM_AR_WATCHLIST',
+        user: currentUser,
+        exportedAt: new Date().toISOString(),
+        entities: listArray
+      };
+
+      const dataStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      const safeUser = String(currentUser || 'User').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Watchlist_${safeUser}_${dd}-${mm}-${yyyy}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerImportWatchlist() {
+      const fileInput = document.getElementById('watchlistImportFileInput');
+      if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+      }
+    }
+
+    function importWatchlistData(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const content = JSON.parse(e.target.result);
+          let importedList = [];
+
+          if (Array.isArray(content)) {
+            importedList = content;
+          } else if (content && Array.isArray(content.entities)) {
+            importedList = content.entities;
+          } else {
+            alert('Format file Watchlist tidak dikenali!');
+            return;
+          }
+
+          watchlistSelectedEntities = new Set(importedList.map(item => String(item)));
+          saveWatchlistToStorage();
+          renderWatchlistDropdown();
+          renderWatchlistTable();
+
+          alert(`Berhasil mengimpor ${watchlistSelectedEntities.size} daftar pelanggan ke Watchlist!`);
+        } catch (err) {
+          alert('Gagal membaca file Import: Pastikan file berformat .json yang valid.');
+        }
+      };
+      reader.readAsText(file);
     }
 
     function openSummaryModal() {
@@ -764,10 +1200,23 @@
         const isChecked = selectedEntities.has(ent.label);
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-2 p-1.5 hover:bg-gray-100 rounded text-xs border-b border-gray-100 last:border-none min-w-max';
-        div.innerHTML = `
-          <input type="checkbox" id="ent_${index}" ${isChecked ? 'checked' : ''} onchange="toggleFilterEntity('${ent.label}', this.checked)" class="rounded flex-shrink-0">
-          <label for="ent_${index}" class="cursor-pointer font-medium text-gray-700 whitespace-nowrap">${ent.label}</label>
-        `;
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = 'ent_' + index;
+        cb.checked = isChecked;
+        cb.className = 'rounded flex-shrink-0 cursor-pointer';
+        cb.onchange = function() {
+          toggleFilterEntity(ent.label, this.checked);
+        };
+
+        const lbl = document.createElement('label');
+        lbl.htmlFor = 'ent_' + index;
+        lbl.className = 'cursor-pointer font-medium text-gray-700 whitespace-nowrap';
+        lbl.textContent = ent.label;
+
+        div.appendChild(cb);
+        div.appendChild(lbl);
         dropdown.appendChild(div);
       });
 
@@ -899,6 +1348,21 @@
       return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
+    function togglePreviewColumnBox(forceState) {
+      isPreviewColumnBoxOpen = forceState !== undefined ? forceState : !isPreviewColumnBoxOpen;
+      const container = document.getElementById('columnToggleContainer');
+      const icon = document.getElementById('previewColToggleIcon');
+      if (isPreviewColumnBoxOpen) {
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+        icon.innerText = '▼';
+      } else {
+        container.classList.add('hidden');
+        container.classList.remove('flex');
+        icon.innerText = '▶';
+      }
+    }
+
     function openPreviewModal() {
       const checkboxes = document.querySelectorAll('.row-checkbox:checked');
       if (checkboxes.length === 0) {
@@ -976,6 +1440,7 @@
       document.getElementById('prevTotalJT').innerText = hasJT ? 'Rp ' + formatRupiah(sumJT) : '-';
 
       columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
+      togglePreviewColumnBox(false);
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
 
@@ -988,8 +1453,11 @@
       if (!container) return;
       container.innerHTML = '';
 
+      let activeCount = 0;
       previewColumns.forEach((col, idx) => {
         const isChecked = columnVisibilityState[idx];
+        if (isChecked) activeCount++;
+
         const label = document.createElement('label');
         label.className = `flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
           isChecked ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-gray-100 border-gray-300 text-gray-500'
@@ -1000,6 +1468,11 @@
         `;
         container.appendChild(label);
       });
+
+      const badge = document.getElementById('previewColCountBadge');
+      if (badge) {
+        badge.innerText = `${activeCount}/${previewColumns.length} tampil`;
+      }
     }
 
     function togglePreviewColumn(index, isVisible) {
