@@ -446,9 +446,12 @@
         </div>
       </div>
 
-      <div class="p-3 sm:p-4 bg-gray-100 border-t flex justify-end space-x-2.5 sm:space-x-3 shrink-0">
+      <div class="p-3 sm:p-4 bg-gray-100 border-t flex flex-wrap justify-end gap-2 sm:gap-2.5 shrink-0">
         <button onclick="closePreviewModal()" class="px-3.5 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Batal</button>
-        <button onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow">Unduh Gambar</button>
+        <button id="btnShareImage" onclick="shareAsImage()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow items-center gap-1.5 transition">
+          <span>📲</span> <span id="btnShareText">Bagikan Langsung</span>
+        </button>
+        <button id="btnDownloadImage" onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition">Unduh Gambar</button>
       </div>
     </div>
   </div>
@@ -511,6 +514,7 @@
 
     let columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
     let isPreviewColumnBoxOpen = false;
+    let cachedShareFile = null;
 
     window.onload = function() {
       const savedUser = localStorage.getItem('ptm_ar_user');
@@ -519,6 +523,44 @@
         showMainPage();
       }
     };
+
+    function isMobileShareSupported() {
+      try {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (!isMobileDevice) return false;
+        if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
+
+        const dummyBlob = new Blob(['test'], { type: 'image/png' });
+        const dummyFile = new File([dummyBlob], 'test.png', { type: 'image/png' });
+        return navigator.canShare({ files: [dummyFile] });
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function updateShareButtonVisibility() {
+      const btnShare = document.getElementById('btnShareImage');
+      if (!btnShare) return;
+
+      if (isMobileShareSupported()) {
+        btnShare.classList.remove('hidden');
+        btnShare.classList.add('inline-flex');
+      } else {
+        btnShare.classList.add('hidden');
+        btnShare.classList.remove('inline-flex');
+      }
+    }
+
+    function invalidateShareCache() {
+      cachedShareFile = null;
+      const btnShareText = document.getElementById('btnShareText');
+      if (btnShareText) {
+        btnShareText.innerText = 'Bagikan Langsung';
+      }
+    }
 
     function handleLogin(e) {
       e.preventDefault();
@@ -1445,6 +1487,8 @@
       applyColumnVisibility();
 
       renderBankOptions();
+      invalidateShareCache();
+      updateShareButtonVisibility();
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
@@ -1477,12 +1521,14 @@
 
     function togglePreviewColumn(index, isVisible) {
       columnVisibilityState[index] = isVisible;
+      invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
     }
 
     function toggleAllPreviewColumns(status) {
       columnVisibilityState = columnVisibilityState.map(() => status);
+      invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
     }
@@ -1539,7 +1585,7 @@
           const isDisabled = opt.isLocked ? 'disabled' : '';
 
           div.innerHTML = `
-            <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} class="rounded text-navy focus:ring-navy">
+            <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} onchange="invalidateShareCache()" class="rounded text-navy focus:ring-navy">
             <label for="bank_${idx}_${bIdx}" class="cursor-pointer font-medium text-gray-700">${bankStr}</label>
           `;
           container.appendChild(div);
@@ -1572,9 +1618,8 @@
       return `${custStr} - ${dateStr}.png`;
     }
 
-    function downloadAsImage() {
+    function generatePreviewCanvas() {
       const element = document.getElementById('exportContainer');
-
       const originalWidth = element.style.width;
       const originalMinWidth = element.style.minWidth;
 
@@ -1592,32 +1637,108 @@
       element.style.width = '1000px';
       element.style.minWidth = '1000px';
 
-      html2canvas(element, {
+      return html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',
         windowWidth: 1200
       }).then(canvas => {
         element.style.width = originalWidth;
         element.style.minWidth = originalMinWidth;
-
         hiddenBankItems.forEach(item => {
           item.style.display = 'flex';
         });
+        return canvas;
+      }).catch(err => {
+        element.style.width = originalWidth;
+        element.style.minWidth = originalMinWidth;
+        hiddenBankItems.forEach(item => {
+          item.style.display = 'flex';
+        });
+        throw err;
+      });
+    }
 
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob);
+          else reject(new Error('Gagal mengonversi gambar ke format file.'));
+        }, 'image/png');
+      });
+    }
+
+    async function shareAsImage() {
+      const btnShare = document.getElementById('btnShareImage');
+      const btnShareText = document.getElementById('btnShareText');
+
+      try {
+        if (cachedShareFile) {
+          await navigator.share({
+            files: [cachedShareFile],
+            title: 'Informasi Piutang - PT PRIMA TUNGGAL MANDIRI'
+          });
+          return;
+        }
+
+        if (btnShare) btnShare.disabled = true;
+        if (btnShareText) btnShareText.innerText = 'Menyiapkan...';
+
+        const canvas = await generatePreviewCanvas();
+        const blob = await canvasToBlob(canvas);
         const fileName = generateFileName(currentPreviewData);
+        const file = new File([blob], fileName, { type: 'image/png' });
 
+        cachedShareFile = file;
+
+        if (btnShare) btnShare.disabled = false;
+        if (btnShareText) btnShareText.innerText = 'Bagikan Langsung';
+
+        await navigator.share({
+          files: [file],
+          title: 'Informasi Piutang - PT PRIMA TUNGGAL MANDIRI'
+        });
+      } catch (err) {
+        if (btnShare) btnShare.disabled = false;
+
+        if (err && err.name === 'AbortError') {
+          if (btnShareText) btnShareText.innerText = 'Bagikan Langsung';
+          return;
+        }
+
+        if (err && err.name === 'NotAllowedError' && cachedShareFile) {
+          if (btnShareText) btnShareText.innerText = 'Ketuk Sekali Lagi';
+          return;
+        }
+
+        if (btnShareText) btnShareText.innerText = 'Bagikan Langsung';
+        alert('Peramban membatasi fitur Bagikan Langsung di halaman ini. Mengalihkan ke Unduh Gambar otomatis.');
+        downloadAsImage();
+      }
+    }
+
+    function downloadAsImage() {
+      const btnDownload = document.getElementById('btnDownloadImage');
+      const originalText = btnDownload ? btnDownload.innerText : 'Unduh Gambar';
+      if (btnDownload) {
+        btnDownload.disabled = true;
+        btnDownload.innerText = 'Mengunduh...';
+      }
+
+      generatePreviewCanvas().then(canvas => {
+        if (btnDownload) {
+          btnDownload.disabled = false;
+          btnDownload.innerText = originalText;
+        }
+        const fileName = generateFileName(currentPreviewData);
         const link = document.createElement('a');
         link.download = fileName;
         link.href = canvas.toDataURL('image/png');
         link.click();
       }).catch(err => {
-        element.style.width = originalWidth;
-        element.style.minWidth = originalMinWidth;
-
-        hiddenBankItems.forEach(item => {
-          item.style.display = 'flex';
-        });
-
+        if (btnDownload) {
+          btnDownload.disabled = false;
+          btnDownload.innerText = originalText;
+        }
         alert('Gagal membuat gambar: ' + err.message);
       });
     }
