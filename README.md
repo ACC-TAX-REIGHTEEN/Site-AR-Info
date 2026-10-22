@@ -137,7 +137,7 @@ Jika Anda ingin memasang atau memperbarui antarmuka web **Site-AR-Info** pada Go
 
 ## 📜 Lisensi
 
-Proyek ini dikembangkan untuk keperluan internal perpajakan dan internal perusahaan. Silakan sesuaikan dengan kebutuhan organisasi Anda.
+Proyek ini dikembangkan untuk keperluan internal perusahaan. Silakan sesuaikan dengan kebutuhan organisasi Anda.
 
 ---
 
