@@ -111,7 +111,7 @@
           <table class="w-full text-xs text-center text-gray-600">
             <thead class="text-[11px] uppercase bg-navy text-white sticky top-0">
               <tr>
-                <th class="p-2.5 sm:p-3 text-center"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAllRows(this.checked)"></th>
+                <th class="p-2.5 sm:p-3 text-center"><input type="checkbox" id="headerCheckbox" class="cursor-pointer" onchange="toggleSelectAllRows(this.checked)"></th>
                 <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">No. Faktur</th>
                 <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Tgl Faktur</th>
                 <th class="p-2.5 sm:p-3 text-center whitespace-nowrap">Jatuh Tempo</th>
@@ -1306,6 +1306,8 @@
 
     function renderARTable() {
       const tbody = document.getElementById('arTableBody');
+      const headerCb = document.getElementById('headerCheckbox');
+      if (headerCb) headerCb.checked = false;
       tbody.innerHTML = '';
 
       const filteredItems = rawARData.filter(item => {
@@ -1321,10 +1323,13 @@
 
       filteredItems.forEach((item, idx) => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b hover:bg-gray-50 transition';
+        tr.className = 'border-b hover:bg-gray-50 transition cursor-pointer';
+        tr.onclick = function(e) {
+          handleRowClick(e, this);
+        };
         tr.innerHTML = `
           <td class="p-2.5 text-center">
-            <input type="checkbox" class="row-checkbox" data-index="${idx}" onchange="updateCalculations()">
+            <input type="checkbox" class="row-checkbox cursor-pointer" data-index="${idx}" onchange="handleCheckboxChange(this)">
           </td>
           <td class="p-2.5 text-center font-semibold text-gray-800 whitespace-nowrap">${item.noFaktur}</td>
           <td class="p-2.5 text-center whitespace-nowrap">${item.tglFaktur}</td>
@@ -1343,18 +1348,60 @@
       updateCalculations();
     }
 
+    function handleRowClick(event, trElement) {
+      if (event.target && event.target.type === 'checkbox') return;
+
+      const selection = window.getSelection ? window.getSelection().toString() : '';
+      if (selection && selection.length > 0) return;
+
+      const cb = trElement.querySelector('.row-checkbox');
+      if (cb) {
+        cb.checked = !cb.checked;
+        updateRowVisual(trElement, cb.checked);
+        updateCalculations();
+      }
+    }
+
+    function handleCheckboxChange(cbElement) {
+      const trElement = cbElement.closest('tr');
+      if (trElement) {
+        updateRowVisual(trElement, cbElement.checked);
+      }
+      updateCalculations();
+    }
+
+    function updateRowVisual(trElement, isChecked) {
+      if (isChecked) {
+        trElement.classList.add('bg-blue-50/90');
+        trElement.classList.remove('hover:bg-gray-50');
+      } else {
+        trElement.classList.remove('bg-blue-50/90');
+        trElement.classList.add('hover:bg-gray-50');
+      }
+    }
+
     function toggleSelectAllRows(forcedStatus) {
       const checkboxes = document.querySelectorAll('.row-checkbox');
       const headerCb = document.getElementById('headerCheckbox');
       const isChecked = forcedStatus !== undefined ? forcedStatus : !headerCb.checked;
       headerCb.checked = isChecked;
 
-      checkboxes.forEach(cb => cb.checked = isChecked);
+      checkboxes.forEach(cb => {
+        cb.checked = isChecked;
+        const tr = cb.closest('tr');
+        if (tr) updateRowVisual(tr, isChecked);
+      });
       updateCalculations();
     }
 
     function updateCalculations() {
+      const allCheckboxes = document.querySelectorAll('.row-checkbox');
       const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+      const headerCb = document.getElementById('headerCheckbox');
+      if (headerCb) {
+        headerCb.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+      }
+
       let totalNilai = 0;
       let totalSisa = 0;
       let totalJT = 0;
