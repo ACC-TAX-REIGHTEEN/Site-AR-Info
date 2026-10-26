@@ -124,10 +124,8 @@ function getARData(username) {
       var namaPenjual = String(row[8] || '').trim().toUpperCase();
       var namaKontak  = String(row[9] || '').trim().toUpperCase();
       
-      var matchGrup1 = false;
-      if (prefixesGrup1.length === 0) {
-        matchGrup1 = true;
-      } else {
+      var matchGrup1 = (prefixesGrup1.length === 0);
+      if (!matchGrup1) {
         for (var p = 0; p < prefixesGrup1.length; p++) {
           var pfx = prefixesGrup1[p];
           if (pfx && noPelanggan.indexOf(pfx) === 0) {
@@ -137,10 +135,8 @@ function getARData(username) {
         }
       }
       
-      var matchGrup2 = false;
-      if (keywordsGrup2.length === 0) {
-        matchGrup2 = true;
-      } else {
+      var matchGrup2 = (keywordsGrup2.length === 0);
+      if (!matchGrup2) {
         for (var k = 0; k < keywordsGrup2.length; k++) {
           var kw2 = keywordsGrup2[k];
           if (kw2 && namaKontak.indexOf(kw2) !== -1) {
@@ -150,10 +146,8 @@ function getARData(username) {
         }
       }
 
-      var matchGrup3 = false;
-      if (keywordsGrup3.length === 0) {
-        matchGrup3 = true;
-      } else {
+      var matchGrup3 = (keywordsGrup3.length === 0);
+      if (!matchGrup3) {
         for (var m = 0; m < keywordsGrup3.length; m++) {
           var kw3 = keywordsGrup3[m];
           if (kw3 && namaPenjual.indexOf(kw3) !== -1) {
@@ -175,23 +169,29 @@ function getARData(username) {
       }
       
       if (matchGrup1 && matchGrup2 && matchGrup3 && matchGrup4) {
-        var umurJtVal = String(row[6] || '');
-        if (isInv) {
-          var tglFakturRaw = row[2];
-          var tglFakturDate = null;
-          
-          if (tglFakturRaw instanceof Date) {
-            tglFakturDate = new Date(tglFakturRaw.getTime());
-          } else if (typeof tglFakturRaw === 'string' && tglFakturRaw.trim() !== '') {
-            tglFakturDate = new Date(tglFakturRaw);
-          }
-          
-          if (tglFakturDate && !isNaN(tglFakturDate.getTime())) {
-            tglFakturDate.setHours(0,0,0,0);
-            var diffTime = today.getTime() - tglFakturDate.getTime();
-            var diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            umurJtVal = diffDays + ' hari';
-          }
+        var rawUmurJt = String(row[6] || '');
+        var parsedUmurJtNum = parseInt(rawUmurJt.replace(/[^0-9-]/g, '')) || 0;
+
+        var tglFakturRaw = row[2];
+        var tglFakturDate = null;
+        if (tglFakturRaw instanceof Date) {
+          tglFakturDate = new Date(tglFakturRaw.getTime());
+        } else if (typeof tglFakturRaw === 'string' && tglFakturRaw.trim() !== '') {
+          tglFakturDate = new Date(tglFakturRaw);
+        }
+        
+        var umurFakturDays = 0;
+        var hasValidTglFaktur = false;
+        if (tglFakturDate && !isNaN(tglFakturDate.getTime())) {
+          tglFakturDate.setHours(0, 0, 0, 0);
+          var diffTime = today.getTime() - tglFakturDate.getTime();
+          umurFakturDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          hasValidTglFaktur = true;
+        }
+
+        var umurJtDisplay = rawUmurJt;
+        if (isInv && hasValidTglFaktur) {
+          umurJtDisplay = umurFakturDays + ' hari';
         }
 
         filteredRows.push({
@@ -201,7 +201,10 @@ function getARData(username) {
           jatuhTempo: formatDate(row[3]),
           nilaiFaktur: Number(row[4]) || 0,
           sisaPiutang: Number(row[5]) || 0,
-          umurJt: umurJtVal,
+          umurJt: umurJtDisplay,
+          umurJtStr: rawUmurJt,
+          umurJtNum: parsedUmurJtNum,
+          umurFakturDays: umurFakturDays,
           namaPelanggan: String(row[7] || ''),
           namaPenjual: String(row[8] || ''),
           namaKontak: String(row[9] || ''),
@@ -261,6 +264,11 @@ function getARData(username) {
       });
     }
   });
+
+  var cloudWatchlist = [];
+  if (hasWatchlistAccess && typeof getUserWatchlistFromCloud === 'function') {
+    cloudWatchlist = getUserWatchlistFromCloud(cleanUsername);
+  }
   
   return {
     success: true,
@@ -269,6 +277,7 @@ function getARData(username) {
     isInv: isInv,
     hasSummaryAccess: hasSummaryAccess,
     hasWatchlistAccess: hasWatchlistAccess,
+    cloudWatchlist: cloudWatchlist,
     waktuPembaruan: waktuPembaruan
   };
 }

@@ -28,9 +28,22 @@
       max-height: 90vh;
       max-height: 90dvh;
     }
+
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateY(-16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toastSlideOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-16px) scale(0.96); }
+    }
+    .toast-enter { animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .toast-exit { animation: toastSlideOut 0.2s ease-in forwards; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
+
+  <div id="toastContainer" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-[100] flex flex-col gap-2.5 pointer-events-none"></div>
 
   <div id="loginSection" class="flex flex-col justify-center items-center min-h-screen px-4">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
@@ -159,21 +172,21 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-consistent-h flex flex-col overflow-hidden relative">
       <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
         <div>
-          <h3 class="font-bold text-sm sm:text-lg flex items-center gap-2">
-            📌 Daftar Pantauan Piutang (Watchlist)
-          </h3>
-          <p class="text-[10px] sm:text-xs text-blue-200 mt-0.5">Disortir otomatis berdasarkan No. Faktur terlama & tersimpan di perangkat ini</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 class="font-bold text-sm sm:text-lg flex items-center gap-1.5">
+              📌 Daftar Pantauan Piutang (Watchlist)
+            </h3>
+            <span id="watchlistCloudStatusBadge" class="text-[10px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+              ☁️ Cloud Sync Aktif
+            </span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-blue-200 mt-0.5">Disortir otomatis berdasarkan No. Faktur terlama & tersinkron otomatis antar-perangkat</p>
         </div>
         <button onclick="closeWatchlistModal()" class="text-white hover:text-gray-300 text-2xl font-bold leading-none">&times;</button>
       </div>
 
       <div class="p-3 sm:p-5 overflow-y-auto flex-grow space-y-4">
-        
-        <div id="watchlistLoading" class="text-center py-12 text-gray-500 font-semibold hidden">
-          ⏳ Memuat data Watchlist...
-        </div>
-
-        <div id="watchlistContent" class="hidden space-y-4">
+        <div id="watchlistContent" class="space-y-4">
           <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3 sm:p-4 shadow-sm">
             <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
               <button type="button" onclick="toggleWatchlistSelectorPanel()" class="text-xs sm:text-sm font-bold text-navy flex items-center gap-1.5 hover:underline">
@@ -182,7 +195,10 @@
                 <span id="watchlistSelectedBadge" class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full">0 dipilih</span>
               </button>
 
-              <div class="flex items-center gap-1.5 sm:gap-2">
+              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <button type="button" onclick="forceSyncWatchlistToCloud()" class="text-[11px] sm:text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Sinkronkan ke Cloud sekarang">
+                  ☁️ Sync Cloud
+                </button>
                 <button type="button" onclick="exportWatchlistData()" class="text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
                   📤 Export
                 </button>
@@ -256,7 +272,6 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <div class="p-3 sm:p-4 bg-gray-100 border-t flex justify-end shrink-0">
@@ -284,11 +299,7 @@
       </div>
 
       <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-5">
-        <div id="summaryLoading" class="text-center py-12 text-gray-500 font-semibold">
-          ⏳ Memuat data ringkasan piutang...
-        </div>
-
-        <div id="summaryContent" class="hidden space-y-5">
+        <div id="summaryContent" class="space-y-5">
           <div id="penjualSummaryFilterBox" class="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
             <div class="flex flex-wrap items-center space-x-2 gap-y-1">
               <label for="selectPenjualSummary" class="text-xs sm:text-sm font-bold text-navy whitespace-nowrap">👤 Filter Nama Penjual:</label>
@@ -382,7 +393,7 @@
         <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-800 text-xl font-bold leading-none">&times;</button>
       </div>
 
-      <div class="px-3 py-2 sm:px-6 sm:py-3 bg-white border-b border-gray-100 shrink-0">
+      <div class="px-3 py-2 sm:px-6 sm:py-3 bg-white border-b border-gray-100 shrink-0 space-y-2">
         <div class="bg-gray-50 border border-gray-200 rounded-xl p-2.5 sm:p-3">
           <div class="flex flex-wrap justify-between items-center gap-2">
             <button type="button" onclick="togglePreviewColumnBox()" class="text-xs font-bold text-navy flex items-center gap-1.5 hover:underline">
@@ -399,13 +410,38 @@
           <div id="columnToggleContainer" class="hidden flex-wrap gap-1.5 sm:gap-2 text-xs mt-2.5 pt-2.5 border-t border-gray-200">
           </div>
         </div>
+
+        <div class="bg-blue-50/70 border border-blue-200 rounded-xl px-3 py-2 flex flex-wrap justify-between items-center gap-2">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <label class="flex items-center space-x-2 cursor-pointer select-none">
+              <input type="checkbox" id="toggleGreetingCheckbox" onchange="toggleGreetingFeature(this.checked)" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+              <span class="text-xs font-bold text-navy">💬 Ucapan Pembuka (Yth. Pelanggan)</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer select-none">
+              <input type="checkbox" id="toggleClosingCheckbox" onchange="toggleClosingFeature(this.checked)" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+              <span class="text-xs font-bold text-navy">🙏 Teks Penutup (Bukti Transfer)</span>
+            </label>
+          </div>
+          <button type="button" onclick="copyGreetingTextToClipboard()" class="text-[11px] bg-white hover:bg-blue-100 text-blue-800 border border-blue-300 font-semibold px-2.5 py-1 rounded-lg transition shadow-sm flex items-center gap-1">
+            📝 Salin Teks WA
+          </button>
+        </div>
       </div>
 
       <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow bg-gray-50/50" id="previewCanvasArea">
         <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0 shadow-sm">
-          <div class="text-center mb-6">
+          <div class="text-center mb-5">
             <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT PRIMA TUNGGAL MANDIRI</h2>
             <p id="prevWaktuPembaruan" class="text-xs text-gray-500 font-medium mt-1">Pembaruan Data: -</p>
+          </div>
+
+          <div id="previewGreetingBox" class="hidden mb-4 p-3.5 bg-slate-50 border-l-4 border-navy rounded-r-xl text-left text-xs text-gray-800 leading-relaxed">
+            <p id="previewGreetingSalutation" contenteditable="true" oninput="invalidateShareCache()" class="font-bold text-navy text-xs sm:text-sm mb-1 focus:outline-none">
+              Yth. Bapak/Ibu Pelanggan,
+            </p>
+            <p id="previewGreetingBody" contenteditable="true" oninput="invalidateShareCache()" class="text-gray-700 text-[11px] sm:text-xs focus:outline-none">
+              Bersama ini kami sampaikan rincian informasi tagihan / piutang faktur yang tercatat pada sistem PT PRIMA TUNGGAL MANDIRI sebagai berikut:
+            </p>
           </div>
 
           <table class="w-full text-[10px] text-center border-collapse mb-6">
@@ -443,6 +479,12 @@
             </div>
             <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT PRIMA TUNGGAL MANDIRI</span></p>
           </div>
+
+          <div id="previewClosingBox" class="hidden mt-4 pt-3 border-t border-dashed border-gray-300 text-left text-xs text-gray-800 leading-relaxed">
+            <p id="previewClosingText" contenteditable="true" oninput="invalidateShareCache()" class="italic text-navy font-medium text-[11px] sm:text-xs focus:outline-none">
+              Mohon mengirimkan bukti transfer setelah melakukan pembayaran. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -450,6 +492,9 @@
         <button onclick="closePreviewModal()" class="px-3.5 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Batal</button>
         <button id="btnShareImage" onclick="shareAsImage()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow items-center gap-1.5 transition">
           <span>📲</span> <span id="btnShareText">Bagikan Langsung</span>
+        </button>
+        <button id="btnCopyImagePC" onclick="copyImageToClipboardPC()" class="hidden px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow items-center gap-1.5 transition">
+          <span>📋</span> <span id="btnCopyImagePCText">Salin Gambar (Copy)</span>
         </button>
         <button id="btnDownloadImage" onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition">Unduh Gambar</button>
       </div>
@@ -489,12 +534,10 @@
     let hasWatchlistAccess = false;
     let waktuPembaruanData = '-';
     
-    let watchlistRawItems = [];
-    let watchlistAvailableEntities = [];
     let watchlistSelectedEntities = new Set();
     let isWatchlistSelectorOpen = true;
+    let cloudSyncDebounceTimer = null;
 
-    let summaryResponseData = null;
     let currentActiveTab = 1;
     let myPieChartInstance = null;
     let selectedPenjualSummary = '';
@@ -514,23 +557,100 @@
 
     let columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
     let isPreviewColumnBoxOpen = false;
+    let isGreetingEnabled = false;
+    let isClosingEnabled = false;
     let cachedShareFile = null;
+
+    function showToast(message, type = 'info', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const styles = {
+        success: {
+          bg: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-50',
+          bar: 'bg-emerald-400',
+          icon: '✅',
+          title: 'Berhasil'
+        },
+        error: {
+          bg: 'bg-rose-950/90 border-rose-500/50 text-rose-50',
+          bar: 'bg-rose-400',
+          icon: '⚠️',
+          title: 'Perhatian'
+        },
+        warning: {
+          bg: 'bg-amber-950/90 border-amber-500/50 text-amber-50',
+          bar: 'bg-amber-400',
+          icon: '🔔',
+          title: 'Informasi'
+        },
+        info: {
+          bg: 'bg-slate-900/90 border-blue-400/40 text-white',
+          bar: 'bg-blue-400',
+          icon: 'ℹ️',
+          title: 'Sistem AR'
+        }
+      };
+
+      const st = styles[type] || styles.info;
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto relative overflow-hidden backdrop-blur-md border rounded-2xl shadow-2xl p-3.5 flex items-start gap-3 toast-enter ${st.bg}`;
+      toast.innerHTML = `
+        <div class="text-base leading-none mt-0.5 shrink-0">${st.icon}</div>
+        <div class="flex-grow pr-2">
+          <p class="text-[11px] font-bold uppercase tracking-wider opacity-80">${st.title}</p>
+          <p class="text-xs font-medium leading-snug mt-0.5">${message}</p>
+        </div>
+        <button type="button" class="text-white/60 hover:text-white text-lg font-bold leading-none shrink-0">&times;</button>
+        <div class="absolute bottom-0 left-0 h-1 ${st.bar} transition-all ease-linear" style="width: 100%; transition-duration: ${duration}ms;"></div>
+      `;
+
+      const closeBtn = toast.querySelector('button');
+      const progressBar = toast.querySelector('div.absolute');
+
+      let removed = false;
+      const removeToast = () => {
+        if (removed) return;
+        removed = true;
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 200);
+      };
+
+      closeBtn.onclick = removeToast;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        if (progressBar) progressBar.style.width = '0%';
+      });
+
+      setTimeout(removeToast, duration);
+    }
 
     window.onload = function() {
       const savedUser = localStorage.getItem('ptm_ar_user');
+      const savedGreetingPref = localStorage.getItem('ptm_ar_greeting_enabled');
+      const savedClosingPref = localStorage.getItem('ptm_ar_closing_enabled');
+      if (savedGreetingPref === 'true') isGreetingEnabled = true;
+      if (savedClosingPref === 'true') isClosingEnabled = true;
+
       if (savedUser) {
         currentUser = savedUser;
         showMainPage();
       }
     };
 
+    function isMobileDeviceEnvironment() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
     function isMobileShareSupported() {
       try {
-        const ua = navigator.userAgent || navigator.vendor || window.opera;
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-        if (!isMobileDevice) return false;
+        if (!isMobileDeviceEnvironment()) return false;
         if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
 
         const dummyBlob = new Blob(['test'], { type: 'image/png' });
@@ -541,16 +661,37 @@
       }
     }
 
-    function updateShareButtonVisibility() {
-      const btnShare = document.getElementById('btnShareImage');
-      if (!btnShare) return;
+    function isPCClipboardImageSupported() {
+      try {
+        if (isMobileDeviceEnvironment()) return false;
+        return Boolean(navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof window.ClipboardItem !== 'undefined');
+      } catch (e) {
+        return false;
+      }
+    }
 
-      if (isMobileShareSupported()) {
-        btnShare.classList.remove('hidden');
-        btnShare.classList.add('inline-flex');
-      } else {
-        btnShare.classList.add('hidden');
-        btnShare.classList.remove('inline-flex');
+    function updateShareAndCopyButtonsVisibility() {
+      const btnShare = document.getElementById('btnShareImage');
+      const btnCopyPC = document.getElementById('btnCopyImagePC');
+
+      if (btnShare) {
+        if (isMobileShareSupported()) {
+          btnShare.classList.remove('hidden');
+          btnShare.classList.add('inline-flex');
+        } else {
+          btnShare.classList.add('hidden');
+          btnShare.classList.remove('inline-flex');
+        }
+      }
+
+      if (btnCopyPC) {
+        if (isPCClipboardImageSupported()) {
+          btnCopyPC.classList.remove('hidden');
+          btnCopyPC.classList.add('inline-flex');
+        } else {
+          btnCopyPC.classList.add('hidden');
+          btnCopyPC.classList.remove('inline-flex');
+        }
       }
     }
 
@@ -580,10 +721,12 @@
           if (res.success) {
             currentUser = res.username;
             localStorage.setItem('ptm_ar_user', currentUser);
+            showToast('Selamat datang kembali, ' + currentUser + '!', 'success');
             showMainPage();
           } else {
             msg.innerText = res.message;
             msg.classList.remove('hidden');
+            showToast(res.message, 'error');
           }
         })
         .withFailureHandler(function(err) {
@@ -591,6 +734,7 @@
           btn.innerText = 'Masuk Sesi';
           msg.innerText = 'Gagal terhubung ke server: ' + err.message;
           msg.classList.remove('hidden');
+          showToast('Gagal terhubung ke server.', 'error');
         })
         .checkLogin(user, pass);
     }
@@ -600,6 +744,7 @@
       currentUser = '';
       document.getElementById('mainSection').classList.add('hidden');
       document.getElementById('loginSection').classList.remove('hidden');
+      showToast('Anda telah keluar dari sesi.', 'info');
     }
 
     function showMainPage() {
@@ -613,7 +758,7 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.success === false) {
-            alert(res.message);
+            showToast(res.message, 'error');
             handleLogout();
             return;
           }
@@ -656,10 +801,11 @@
           }
 
           buildFilterEntities();
+          reconcileWatchlistCloudAndLocal(res.cloudWatchlist || []);
           renderARTable();
         })
         .withFailureHandler(function(err) {
-          alert('Gagal terhubung ke server: ' + err.message);
+          showToast('Gagal terhubung ke server: ' + err.message, 'error');
         })
         .getARData(currentUser);
     }
@@ -668,14 +814,40 @@
       return 'ptm_ar_watchlist_' + String(currentUser || '').trim().toUpperCase();
     }
 
-    function loadWatchlistFromStorage() {
+    function reconcileWatchlistCloudAndLocal(cloudList) {
       watchlistSelectedEntities = new Set();
+      let localList = [];
+      let hasLocalRecord = false;
+
+      try {
+        const saved = localStorage.getItem(getWatchlistStorageKey());
+        if (saved !== null) {
+          hasLocalRecord = true;
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            localList = parsed.map(item => String(item));
+          }
+        }
+      } catch (e) {
+        console.error('Gagal membaca Watchlist lokal:', e);
+      }
+
+      if (Array.isArray(cloudList) && cloudList.length > 0) {
+        cloudList.forEach(item => watchlistSelectedEntities.add(String(item)));
+        localStorage.setItem(getWatchlistStorageKey(), JSON.stringify(Array.from(watchlistSelectedEntities)));
+      } else if (hasLocalRecord && localList.length > 0) {
+        localList.forEach(item => watchlistSelectedEntities.add(String(item)));
+        scheduleWatchlistCloudSync();
+      }
+    }
+
+    function loadWatchlistFromStorage() {
       try {
         const saved = localStorage.getItem(getWatchlistStorageKey());
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            parsed.forEach(item => watchlistSelectedEntities.add(String(item)));
+            watchlistSelectedEntities = new Set(parsed.map(item => String(item)));
           }
         }
       } catch (e) {
@@ -683,45 +855,73 @@
       }
     }
 
+    function setWatchlistSyncBadge(statusText, isSyncing) {
+      const badge = document.getElementById('watchlistCloudStatusBadge');
+      if (!badge) return;
+      badge.innerText = statusText;
+      if (isSyncing) {
+        badge.className = 'text-[10px] bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2 py-0.5 rounded-full font-semibold animate-pulse';
+      } else {
+        badge.className = 'text-[10px] bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 px-2 py-0.5 rounded-full font-semibold';
+      }
+    }
+
+    function scheduleWatchlistCloudSync() {
+      setWatchlistSyncBadge('⏳ Menyimpan ke Cloud...', true);
+      if (cloudSyncDebounceTimer) clearTimeout(cloudSyncDebounceTimer);
+      cloudSyncDebounceTimer = setTimeout(() => {
+        const arr = Array.from(watchlistSelectedEntities);
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              setWatchlistSyncBadge('☁️ Tersinkron ke Cloud', false);
+            } else {
+              setWatchlistSyncBadge('⚠️ Tersimpan Lokal', false);
+            }
+          })
+          .withFailureHandler(function() {
+            setWatchlistSyncBadge('⚠️ Tersimpan Lokal', false);
+          })
+          .saveUserWatchlistToCloud(currentUser, arr);
+      }, 600);
+    }
+
+    function forceSyncWatchlistToCloud() {
+      setWatchlistSyncBadge('⏳ Menyinkronkan...', true);
+      const arr = Array.from(watchlistSelectedEntities);
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            setWatchlistSyncBadge('☁️ Tersinkron ke Cloud', false);
+            showToast('Watchlist berhasil disinkronkan ke Cloud (' + res.count + ' entitas).', 'success');
+          } else {
+            setWatchlistSyncBadge('⚠️ Gagal Sync Cloud', false);
+            showToast((res && res.message) || 'Gagal menyinkronkan ke Cloud.', 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          setWatchlistSyncBadge('⚠️ Gagal Sync Cloud', false);
+          showToast('Gagal terhubung ke Cloud: ' + err.message, 'error');
+        })
+        .saveUserWatchlistToCloud(currentUser, arr);
+    }
+
     function saveWatchlistToStorage() {
       try {
         const arr = Array.from(watchlistSelectedEntities);
         localStorage.setItem(getWatchlistStorageKey(), JSON.stringify(arr));
+        scheduleWatchlistCloudSync();
       } catch (e) {
         console.error('Gagal menyimpan data Watchlist ke storage:', e);
       }
     }
 
     function openWatchlistModal() {
+      loadWatchlistFromStorage();
+      document.getElementById('watchlistSearchInput').value = '';
+      renderWatchlistDropdown();
+      renderWatchlistTable();
       document.getElementById('watchlistModal').classList.remove('hidden');
-      document.getElementById('watchlistLoading').classList.remove('hidden');
-      document.getElementById('watchlistContent').classList.add('hidden');
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          document.getElementById('watchlistLoading').classList.add('hidden');
-          if (!res || !res.success) {
-            alert(res.message || 'Gagal mengambil data Watchlist.');
-            closeWatchlistModal();
-            return;
-          }
-
-          watchlistRawItems = res.items || [];
-          watchlistAvailableEntities = res.entities || [];
-
-          loadWatchlistFromStorage();
-          document.getElementById('watchlistSearchInput').value = '';
-          renderWatchlistDropdown();
-          renderWatchlistTable();
-
-          document.getElementById('watchlistContent').classList.remove('hidden');
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById('watchlistLoading').classList.add('hidden');
-          alert('Terjadi kesalahan saat memuat Watchlist: ' + err.message);
-          closeWatchlistModal();
-        })
-        .getWatchlistData(currentUser);
     }
 
     function closeWatchlistModal() {
@@ -746,13 +946,13 @@
       if (!dropdown) return;
       dropdown.innerHTML = '';
 
-      if (watchlistAvailableEntities.length === 0) {
+      if (searchEntities.length === 0) {
         dropdown.innerHTML = '<div class="text-xs text-gray-400 p-2 text-center">Tidak ada entitas pelanggan tersedia.</div>';
         updateWatchlistCountInfo();
         return;
       }
 
-      watchlistAvailableEntities.forEach((ent, index) => {
+      searchEntities.forEach((ent, index) => {
         const isChecked = watchlistSelectedEntities.has(ent.label);
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-2 p-1.5 hover:bg-indigo-50/60 rounded text-xs border-b border-gray-100 last:border-none min-w-max';
@@ -786,9 +986,9 @@
       if (!dropdown) return;
       const items = dropdown.children;
 
-      for (let i = 0; i < watchlistAvailableEntities.length; i++) {
+      for (let i = 0; i < searchEntities.length; i++) {
         if (!items[i]) continue;
-        const ent = watchlistAvailableEntities[i];
+        const ent = searchEntities[i];
         if (ent.label.toLowerCase().includes(q)) {
           items[i].style.display = 'flex';
         } else {
@@ -810,9 +1010,11 @@
 
     function selectAllWatchlistEntities(status) {
       if (status) {
-        watchlistAvailableEntities.forEach(e => watchlistSelectedEntities.add(e.label));
+        searchEntities.forEach(e => watchlistSelectedEntities.add(e.label));
+        showToast('Seluruh entitas ditambahkan ke Watchlist.', 'success');
       } else {
         watchlistSelectedEntities.clear();
+        showToast('Daftar Watchlist telah dibersihkan.', 'warning');
       }
       saveWatchlistToStorage();
       renderWatchlistDropdown();
@@ -820,11 +1022,11 @@
     }
 
     function updateWatchlistCountInfo() {
-      const validSelectedCount = watchlistAvailableEntities.filter(e => watchlistSelectedEntities.has(e.label)).length;
+      const validSelectedCount = searchEntities.filter(e => watchlistSelectedEntities.has(e.label)).length;
       const infoEl = document.getElementById('watchlistEntityCountInfo');
       const badgeEl = document.getElementById('watchlistSelectedBadge');
       if (infoEl) {
-        infoEl.innerText = `${validSelectedCount} dari ${watchlistAvailableEntities.length} entitas ditandai`;
+        infoEl.innerText = `${validSelectedCount} dari ${searchEntities.length} entitas ditandai`;
       }
       if (badgeEl) {
         badgeEl.innerText = `${validSelectedCount} dipilih`;
@@ -836,7 +1038,7 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const wlItems = watchlistRawItems.filter(item => {
+      const wlItems = rawARData.filter(item => {
         const key = `${item.noPelanggan} | ${item.namaPelanggan} | ${item.namaKontak}`;
         return watchlistSelectedEntities.has(key);
       });
@@ -886,7 +1088,7 @@
     function exportWatchlistData() {
       const listArray = Array.from(watchlistSelectedEntities);
       if (listArray.length === 0) {
-        alert('Daftar Watchlist masih kosong! Silakan tandai pelanggan terlebih dahulu sebelum melakukan Export.');
+        showToast('Daftar Watchlist masih kosong! Tandai pelanggan terlebih dahulu.', 'warning');
         return;
       }
 
@@ -914,6 +1116,7 @@
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      showToast('File cadangan Watchlist (.json) berhasil diunduh.', 'success');
     }
 
     function triggerImportWatchlist() {
@@ -939,7 +1142,7 @@
           } else if (content && Array.isArray(content.entities)) {
             importedList = content.entities;
           } else {
-            alert('Format file Watchlist tidak dikenali!');
+            showToast('Format file Watchlist tidak dikenali!', 'error');
             return;
           }
 
@@ -948,42 +1151,27 @@
           renderWatchlistDropdown();
           renderWatchlistTable();
 
-          alert(`Berhasil mengimpor ${watchlistSelectedEntities.size} daftar pelanggan ke Watchlist!`);
+          showToast(`Berhasil mengimpor & menyinkronkan ${watchlistSelectedEntities.size} pelanggan ke Cloud!`, 'success');
         } catch (err) {
-          alert('Gagal membaca file Import: Pastikan file berformat .json yang valid.');
+          showToast('Gagal membaca file Import: Pastikan berformat .json yang valid.', 'error');
         }
       };
       reader.readAsText(file);
     }
 
     function openSummaryModal() {
+      selectedPenjualSummary = '';
+      const penjualSet = new Set();
+      rawARData.forEach(item => {
+        if (item.namaPenjual && item.namaPenjual.trim() !== '') {
+          penjualSet.add(item.namaPenjual.trim());
+        }
+      });
+      const penjualList = Array.from(penjualSet).sort();
+
+      populatePenjualFilterDropdown(penjualList);
       document.getElementById('summaryModal').classList.remove('hidden');
-      document.getElementById('summaryLoading').classList.remove('hidden');
-      document.getElementById('summaryContent').classList.add('hidden');
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          document.getElementById('summaryLoading').classList.add('hidden');
-          if (!res || !res.success) {
-            alert(res.message || 'Gagal mengambil data ringkasan.');
-            closeSummaryModal();
-            return;
-          }
-
-          summaryResponseData = res;
-          selectedPenjualSummary = '';
-          
-          populatePenjualFilterDropdown(res.penjualList || []);
-
-          document.getElementById('summaryContent').classList.remove('hidden');
-          switchSummaryTab(1);
-        })
-        .withFailureHandler(function(err) {
-          document.getElementById('summaryLoading').classList.add('hidden');
-          alert('Terjadi kesalahan: ' + err.message);
-          closeSummaryModal();
-        })
-        .getSummaryData(currentUser);
+      switchSummaryTab(1);
     }
 
     function closeSummaryModal() {
@@ -1023,7 +1211,8 @@
         if (selectedPenjualSummary) {
           infoEl.innerText = `Filter Aktif: ${selectedPenjualSummary}`;
         } else {
-          const totalPenjual = summaryResponseData && summaryResponseData.penjualList ? summaryResponseData.penjualList.length : 0;
+          const select = document.getElementById('selectPenjualSummary');
+          const totalPenjual = select ? Math.max(0, select.options.length - 1) : 0;
           infoEl.innerText = totalPenjual > 1 ? `Terdeteksi ${totalPenjual} penjual. Menampilkan semua data.` : 'Menampilkan semua data.';
         }
       }
@@ -1098,15 +1287,19 @@
     }
 
     function renderCurrentSummaryView() {
-      if (!summaryResponseData) return;
-
       const isFeature1 = (currentActiveTab === 1);
-      const rawFeatureData = isFeature1 ? summaryResponseData.feature1 : summaryResponseData.feature2;
 
-      let items = rawFeatureData.items || [];
+      let items = rawARData.slice();
       if (selectedPenjualSummary !== '') {
         items = items.filter(item => String(item.namaPenjual || '').trim().toUpperCase() === selectedPenjualSummary.toUpperCase());
       }
+
+      items.sort((a, b) => {
+        const valA = isFeature1 ? a.umurJtNum : a.umurFakturDays;
+        const valB = isFeature1 ? b.umurJtNum : b.umurFakturDays;
+        if (valB !== valA) return valB - valA;
+        return String(a.namaPelanggan || '').toLowerCase().localeCompare(String(b.namaPelanggan || '').toLowerCase());
+      });
 
       const activeFeatureData = calculateClientBuckets(items, isFeature1);
 
@@ -1437,6 +1630,107 @@
       return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
 
+    function extractCustomerNamesFromSelection(selectedData) {
+      const uniqueNames = [...new Set(selectedData.map(item => String(item.namaPelanggan || '').trim()).filter(Boolean))];
+      if (uniqueNames.length === 0) return 'Pelanggan';
+      return uniqueNames.join(', ');
+    }
+
+    function updateGreetingContent(selectedData) {
+      const customerNames = extractCustomerNamesFromSelection(selectedData);
+      const salutationEl = document.getElementById('previewGreetingSalutation');
+      const bodyEl = document.getElementById('previewGreetingBody');
+
+      if (salutationEl) {
+        salutationEl.innerText = `Yth. Bapak/Ibu ${customerNames},`;
+      }
+      if (bodyEl) {
+        bodyEl.innerText = `Bersama ini kami lampirkan rincian ${selectedData.length} faktur tagihan / piutang yang tercatat pada sistem PT PRIMA TUNGGAL MANDIRI sebagai berikut:`;
+      }
+    }
+
+    function toggleGreetingFeature(isEnabled) {
+      isGreetingEnabled = Boolean(isEnabled);
+      localStorage.setItem('ptm_ar_greeting_enabled', String(isGreetingEnabled));
+      const box = document.getElementById('previewGreetingBox');
+      const cb = document.getElementById('toggleGreetingCheckbox');
+      if (cb) cb.checked = isGreetingEnabled;
+
+      if (box) {
+        if (isGreetingEnabled) {
+          box.classList.remove('hidden');
+        } else {
+          box.classList.add('hidden');
+        }
+      }
+      invalidateShareCache();
+    }
+
+    function toggleClosingFeature(isEnabled) {
+      isClosingEnabled = Boolean(isEnabled);
+      localStorage.setItem('ptm_ar_closing_enabled', String(isClosingEnabled));
+      const box = document.getElementById('previewClosingBox');
+      const cb = document.getElementById('toggleClosingCheckbox');
+      if (cb) cb.checked = isClosingEnabled;
+
+      if (box) {
+        if (isClosingEnabled) {
+          box.classList.remove('hidden');
+        } else {
+          box.classList.add('hidden');
+        }
+      }
+      invalidateShareCache();
+    }
+
+    function buildWhatsAppGreetingText() {
+      const customerNames = extractCustomerNamesFromSelection(currentPreviewData);
+      const totalSisa = document.getElementById('prevTotalSisa') ? document.getElementById('prevTotalSisa').innerText : 'Rp 0';
+      const totalJT = document.getElementById('prevTotalJT') ? document.getElementById('prevTotalJT').innerText : '-';
+      const closingEl = document.getElementById('previewClosingText');
+      const customClosing = closingEl ? closingEl.innerText.trim() : 'Mohon mengirimkan bukti transfer setelah melakukan pembayaran. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.';
+
+      const activeBanks = [];
+      document.querySelectorAll('#bankContainer .bank-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        const lbl = item.querySelector('label');
+        if (cb && cb.checked && lbl) {
+          activeBanks.push(lbl.innerText.trim());
+        }
+      });
+
+      let text = `Yth. Bapak/Ibu *${customerNames}*,\n\n`;
+      text += `Berikut kami sampaikan rincian *${currentPreviewData.length} faktur* tagihan *PT PRIMA TUNGGAL MANDIRI* dengan *Total Sisa Piutang: ${totalSisa}*`;
+      if (!isInvUser && totalJT !== '-') {
+        text += ` (Jatuh Tempo: *${totalJT}*)`;
+      }
+      text += `.\n\n`;
+
+      if (activeBanks.length > 0) {
+        text += `Pembayaran dapat ditransfer melalui rekening:\n`;
+        activeBanks.forEach(b => {
+          text += `• *${b}*\n`;
+        });
+        text += `a.n *PT PRIMA TUNGGAL MANDIRI*\n\n`;
+      }
+
+      text += customClosing;
+      return text;
+    }
+
+    function copyGreetingTextToClipboard() {
+      const text = buildWhatsAppGreetingText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Teks pengantar & penutup WhatsApp berhasil disalin!', 'success');
+        }).catch(() => {
+          showToast('Gagal menyalin teks secara otomatis.', 'error');
+        });
+      } else {
+        showToast('Peramban tidak mendukung salin teks otomatis.', 'warning');
+      }
+    }
+
     function togglePreviewColumnBox(forceState) {
       isPreviewColumnBoxOpen = forceState !== undefined ? forceState : !isPreviewColumnBoxOpen;
       const container = document.getElementById('columnToggleContainer');
@@ -1455,7 +1749,7 @@
     function openPreviewModal() {
       const checkboxes = document.querySelectorAll('.row-checkbox:checked');
       if (checkboxes.length === 0) {
-        alert('Silakan pilih/centang minimal satu data piutang terlebih dahulu.');
+        showToast('Silakan pilih/centang minimal satu baris data piutang terlebih dahulu.', 'warning');
         return;
       }
 
@@ -1528,6 +1822,10 @@
       document.getElementById('prevTotalSisa').innerText = 'Rp ' + formatRupiah(sumSisa);
       document.getElementById('prevTotalJT').innerText = hasJT ? 'Rp ' + formatRupiah(sumJT) : '-';
 
+      updateGreetingContent(selectedData);
+      toggleGreetingFeature(isGreetingEnabled);
+      toggleClosingFeature(isClosingEnabled);
+
       columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
       togglePreviewColumnBox(false);
       renderColumnToggleCheckboxes();
@@ -1535,7 +1833,7 @@
 
       renderBankOptions();
       invalidateShareCache();
-      updateShareButtonVisibility();
+      updateShareAndCopyButtonsVisibility();
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
@@ -1714,16 +2012,53 @@
       });
     }
 
+    async function copyImageToClipboardPC() {
+      const btnCopy = document.getElementById('btnCopyImagePC');
+      const btnCopyText = document.getElementById('btnCopyImagePCText');
+
+      try {
+        if (btnCopy) btnCopy.disabled = true;
+        if (btnCopyText) btnCopyText.innerText = 'Menyalin...';
+
+        const blobPromise = generatePreviewCanvas().then(canvas => canvasToBlob(canvas));
+
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blobPromise })
+          ]);
+        } catch (directErr) {
+          const resolvedBlob = await blobPromise;
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': resolvedBlob })
+          ]);
+        }
+
+        if (btnCopy) btnCopy.disabled = false;
+        if (btnCopyText) btnCopyText.innerText = 'Salin Gambar (Copy)';
+        showToast('Gambar berhasil disalin ke Clipboard! Silakan tekan Ctrl+V di WhatsApp.', 'success', 4500);
+      } catch (err) {
+        if (btnCopy) btnCopy.disabled = false;
+        if (btnCopyText) btnCopyText.innerText = 'Salin Gambar (Copy)';
+        showToast('Peramban membatasi akses Clipboard gambar. Mengunduh gambar secara otomatis.', 'warning');
+        downloadAsImage();
+      }
+    }
+
     async function shareAsImage() {
       const btnShare = document.getElementById('btnShareImage');
       const btnShareText = document.getElementById('btnShareText');
 
       try {
+        const sharePayload = {
+          title: 'Informasi Piutang - PT PRIMA TUNGGAL MANDIRI'
+        };
+        if (isGreetingEnabled || isClosingEnabled) {
+          sharePayload.text = buildWhatsAppGreetingText();
+        }
+
         if (cachedShareFile) {
-          await navigator.share({
-            files: [cachedShareFile],
-            title: 'Informasi Piutang - PT PRIMA TUNGGAL MANDIRI'
-          });
+          sharePayload.files = [cachedShareFile];
+          await navigator.share(sharePayload);
           return;
         }
 
@@ -1740,10 +2075,8 @@
         if (btnShare) btnShare.disabled = false;
         if (btnShareText) btnShareText.innerText = 'Bagikan Langsung';
 
-        await navigator.share({
-          files: [file],
-          title: 'Informasi Piutang - PT PRIMA TUNGGAL MANDIRI'
-        });
+        sharePayload.files = [file];
+        await navigator.share(sharePayload);
       } catch (err) {
         if (btnShare) btnShare.disabled = false;
 
@@ -1754,11 +2087,12 @@
 
         if (err && err.name === 'NotAllowedError' && cachedShareFile) {
           if (btnShareText) btnShareText.innerText = 'Ketuk Sekali Lagi';
+          showToast('Gambar siap! Silakan ketuk tombol Bagikan sekali lagi.', 'info');
           return;
         }
 
         if (btnShareText) btnShareText.innerText = 'Bagikan Langsung';
-        alert('Peramban membatasi fitur Bagikan Langsung di halaman ini. Mengalihkan ke Unduh Gambar otomatis.');
+        showToast('Peramban membatasi fitur Bagikan Langsung. Mengalihkan ke Unduh Gambar.', 'warning');
         downloadAsImage();
       }
     }
@@ -1781,12 +2115,13 @@
         link.download = fileName;
         link.href = canvas.toDataURL('image/png');
         link.click();
+        showToast('Gambar berhasil diunduh: ' + fileName, 'success');
       }).catch(err => {
         if (btnDownload) {
           btnDownload.disabled = false;
           btnDownload.innerText = originalText;
         }
-        alert('Gagal membuat gambar: ' + err.message);
+        showToast('Gagal membuat gambar: ' + err.message, 'error');
       });
     }
 
@@ -1810,6 +2145,7 @@
         msg.className = 'text-xs text-center text-red-500';
         msg.innerText = 'Harap isi semua kolom!';
         msg.classList.remove('hidden');
+        showToast('Harap isi sandi lama dan sandi baru!', 'warning');
         return;
       }
 
@@ -1819,10 +2155,12 @@
           if (res.success) {
             msg.className = 'text-xs text-center text-green-600';
             msg.innerText = res.message;
-            setTimeout(closeChangePasswordModal, 1500);
+            showToast(res.message, 'success');
+            setTimeout(closeChangePasswordModal, 1200);
           } else {
             msg.className = 'text-xs text-center text-red-500';
             msg.innerText = res.message;
+            showToast(res.message, 'error');
           }
         })
         .changePassword(currentUser, oldP, newP);
