@@ -50,6 +50,15 @@ function formatWaktuPembaruan(val) {
   return String(val);
 }
 
+function formatDate(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    return val.getDate() + ' ' + months[val.getMonth()] + ' ' + val.getFullYear();
+  }
+  return String(val);
+}
+
 function getARData(username) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var confSheet = ss.getSheetByName('conf');
@@ -70,6 +79,24 @@ function getARData(username) {
   var hasWatchlistAccess = false;
   
   var cleanUsername = String(username || '').trim().toUpperCase();
+
+  var hasWatermark = false;
+  var watermarkColIdx = -1;
+
+  if (confData.length > 0) {
+    for (var col = 0; col < confData[0].length; col++) {
+      var headerTitle = String(confData[0][col] || '').trim().toUpperCase();
+      if (headerTitle === 'WATERMARK') {
+        watermarkColIdx = col;
+        break;
+      }
+    }
+  }
+
+  if (watermarkColIdx !== -1 && confData.length > 1) {
+    var masterValue = String(confData[1][watermarkColIdx] || '').trim().toUpperCase();
+    hasWatermark = (masterValue === 'YA');
+  }
 
   for (var i = 1; i < confData.length; i++) {
     var registeredUser = String(confData[i][0] || '').trim().toUpperCase();
@@ -277,16 +304,8 @@ function getARData(username) {
     isInv: isInv,
     hasSummaryAccess: hasSummaryAccess,
     hasWatchlistAccess: hasWatchlistAccess,
+    hasWatermark: hasWatermark,
     cloudWatchlist: cloudWatchlist,
     waktuPembaruan: waktuPembaruan
   };
-}
-
-function formatDate(val) {
-  if (!val) return '';
-  if (val instanceof Date) {
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-    return val.getDate() + ' ' + months[val.getMonth()] + ' ' + val.getFullYear();
-  }
-  return String(val);
 }

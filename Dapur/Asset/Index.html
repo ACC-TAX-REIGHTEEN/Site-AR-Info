@@ -39,6 +39,17 @@
     }
     .toast-enter { animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .toast-exit { animation: toastSlideOut 0.2s ease-in forwards; }
+
+    .watermark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      user-select: none;
+      z-index: 20;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -429,17 +440,20 @@
       </div>
 
       <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow bg-gray-50/50" id="previewCanvasArea">
-        <div id="exportContainer" class="p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0 shadow-sm">
+        <div id="exportContainer" class="relative overflow-hidden p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0 shadow-sm">
+          
+          <canvas id="watermarkCanvas" class="watermark-overlay hidden"></canvas>
+
           <div class="text-center mb-5">
             <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT PRIMA TUNGGAL MANDIRI</h2>
             <p id="prevWaktuPembaruan" class="text-xs text-gray-500 font-medium mt-1">Pembaruan Data: -</p>
           </div>
 
           <div id="previewGreetingBox" class="hidden mb-4 p-3.5 bg-slate-50 border-l-4 border-navy rounded-r-xl text-left text-xs text-gray-800 leading-relaxed">
-            <p id="previewGreetingSalutation" contenteditable="true" oninput="invalidateShareCache()" class="font-bold text-navy text-xs sm:text-sm mb-1 focus:outline-none">
+            <p id="previewGreetingSalutation" contenteditable="true" oninput="handlePreviewContentEdit()" class="font-bold text-navy text-xs sm:text-sm mb-1 focus:outline-none">
               Yth. Bapak/Ibu Pelanggan,
             </p>
-            <p id="previewGreetingBody" contenteditable="true" oninput="invalidateShareCache()" class="text-gray-700 text-[11px] sm:text-xs focus:outline-none">
+            <p id="previewGreetingBody" contenteditable="true" oninput="handlePreviewContentEdit()" class="text-gray-700 text-[11px] sm:text-xs focus:outline-none">
               Bersama ini kami sampaikan rincian informasi tagihan / piutang faktur yang tercatat pada sistem PT PRIMA TUNGGAL MANDIRI sebagai berikut:
             </p>
           </div>
@@ -481,7 +495,7 @@
           </div>
 
           <div id="previewClosingBox" class="hidden mt-4 pt-3 border-t border-dashed border-gray-300 text-left text-xs text-gray-800 leading-relaxed">
-            <p id="previewClosingText" contenteditable="true" oninput="invalidateShareCache()" class="italic text-navy font-medium text-[11px] sm:text-xs focus:outline-none">
+            <p id="previewClosingText" contenteditable="true" oninput="handlePreviewContentEdit()" class="italic text-navy font-medium text-[11px] sm:text-xs focus:outline-none">
               Mohon mengirimkan bukti transfer setelah melakukan pembayaran. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.
             </p>
           </div>
@@ -532,6 +546,7 @@
     let isInvUser = false;
     let hasSummaryAccess = false;
     let hasWatchlistAccess = false;
+    let hasWatermarkAccess = false;
     let waktuPembaruanData = '-';
     
     let watchlistSelectedEntities = new Set();
@@ -703,6 +718,11 @@
       }
     }
 
+    function handlePreviewContentEdit() {
+      invalidateShareCache();
+      renderWatermarkOverlay();
+    }
+
     function handleLogin(e) {
       e.preventDefault();
       const user = document.getElementById('inputUser').value.trim();
@@ -768,6 +788,7 @@
           isInvUser = res.isInv || false;
           hasSummaryAccess = res.hasSummaryAccess || false;
           hasWatchlistAccess = res.hasWatchlistAccess || false;
+          hasWatermarkAccess = res.hasWatermark || false;
 
           waktuPembaruanData = res.waktuPembaruan || '-';
           const displayEl = document.getElementById('displayWaktuPembaruan');
@@ -1664,6 +1685,7 @@
         }
       }
       invalidateShareCache();
+      renderWatermarkOverlay();
     }
 
     function toggleClosingFeature(isEnabled) {
@@ -1681,6 +1703,89 @@
         }
       }
       invalidateShareCache();
+      renderWatermarkOverlay();
+    }
+
+    function getSelectedBankStrings() {
+      const selectedBanks = [];
+      document.querySelectorAll('#bankContainer .bank-item').forEach(item => {
+        const cb = item.querySelector('input[type="checkbox"]');
+        const lbl = item.querySelector('label');
+        if (cb && cb.checked && lbl) {
+          selectedBanks.push(lbl.innerText.trim());
+        }
+      });
+      return selectedBanks;
+    }
+
+    function handleBankSelectionChange() {
+      invalidateShareCache();
+      renderWatermarkOverlay();
+    }
+
+    function renderWatermarkOverlay() {
+      const container = document.getElementById('exportContainer');
+      const canvas = document.getElementById('watermarkCanvas');
+      if (!container || !canvas) return;
+
+      if (!hasWatermarkAccess) {
+        canvas.classList.add('hidden');
+        return;
+      }
+
+      canvas.classList.remove('hidden');
+
+      const width = container.offsetWidth || 1000;
+      const height = container.offsetHeight || 560;
+
+      const dpr = 2;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      const angleDeg = -35;                         
+      const stepX = 180;                            
+      const stepY = 68;                             
+      const watermarkColor = 'rgba(38, 84, 138, 0.22)'; 
+
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(angleDeg * Math.PI / 180);
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = watermarkColor;
+
+      const activeBanks = getSelectedBankStrings();
+
+      const diag = Math.ceil(Math.sqrt(width * width + height * height));
+
+      let rowIndex = 0;
+      for (let y = -diag; y <= diag; y += stepY) {
+        const offsetX = (rowIndex % 2 !== 0) ? (stepX / 2) : 0;
+
+        for (let x = -diag; x <= diag; x += stepX) {
+          const drawX = x + offsetX;
+
+          ctx.font = '700 10px Inter, sans-serif';
+          ctx.fillText('PT PRIMA TUNGGAL MANDIRI', drawX, y - 6);
+
+          if (activeBanks.length > 0) {
+            ctx.font = '600 9.5px Inter, sans-serif';
+            activeBanks.forEach((bankText, bIdx) => {
+              ctx.fillText(bankText, drawX, y + 7 + (bIdx * 12));
+            });
+          }
+        }
+        rowIndex++;
+      }
+
+      ctx.restore();
     }
 
     function buildWhatsAppGreetingText() {
@@ -1690,14 +1795,7 @@
       const closingEl = document.getElementById('previewClosingText');
       const customClosing = closingEl ? closingEl.innerText.trim() : 'Mohon mengirimkan bukti transfer setelah melakukan pembayaran. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.';
 
-      const activeBanks = [];
-      document.querySelectorAll('#bankContainer .bank-item').forEach(item => {
-        const cb = item.querySelector('input[type="checkbox"]');
-        const lbl = item.querySelector('label');
-        if (cb && cb.checked && lbl) {
-          activeBanks.push(lbl.innerText.trim());
-        }
-      });
+      const activeBanks = getSelectedBankStrings();
 
       let text = `Yth. Bapak/Ibu *${customerNames}*,\n\n`;
       text += `Berikut kami sampaikan rincian *${currentPreviewData.length} faktur* tagihan *PT PRIMA TUNGGAL MANDIRI* dengan *Total Sisa Piutang: ${totalSisa}*`;
@@ -1834,7 +1932,11 @@
       renderBankOptions();
       invalidateShareCache();
       updateShareAndCopyButtonsVisibility();
+
       document.getElementById('previewModal').classList.remove('hidden');
+      requestAnimationFrame(() => {
+        renderWatermarkOverlay();
+      });
     }
 
     function renderColumnToggleCheckboxes() {
@@ -1869,6 +1971,7 @@
       invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
+      renderWatermarkOverlay();
     }
 
     function toggleAllPreviewColumns(status) {
@@ -1876,6 +1979,7 @@
       invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
+      renderWatermarkOverlay();
     }
 
     function applyColumnVisibility() {
@@ -1930,7 +2034,7 @@
           const isDisabled = opt.isLocked ? 'disabled' : '';
 
           div.innerHTML = `
-            <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} onchange="invalidateShareCache()" class="rounded text-navy focus:ring-navy">
+            <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} onchange="handleBankSelectionChange()" class="rounded text-navy focus:ring-navy">
             <label for="bank_${idx}_${bIdx}" class="cursor-pointer font-medium text-gray-700">${bankStr}</label>
           `;
           container.appendChild(div);
@@ -1982,6 +2086,8 @@
       element.style.width = '1000px';
       element.style.minWidth = '1000px';
 
+      renderWatermarkOverlay();
+
       return html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',
@@ -1992,6 +2098,7 @@
         hiddenBankItems.forEach(item => {
           item.style.display = 'flex';
         });
+        renderWatermarkOverlay();
         return canvas;
       }).catch(err => {
         element.style.width = originalWidth;
@@ -1999,6 +2106,7 @@
         hiddenBankItems.forEach(item => {
           item.style.display = 'flex';
         });
+        renderWatermarkOverlay();
         throw err;
       });
     }
