@@ -1,6 +1,9 @@
 import configparser
-import pandas as pd
+import warnings
+from datetime import datetime
 import gspread
+import pandas as pd
+
 
 def sinkronkan_data_sheets():
     try:
@@ -22,7 +25,12 @@ def sinkronkan_data_sheets():
         worksheet.batch_clear(['A2:K'])
 
         print("--> Membaca data dari ARClean_temp.xlsx...")
-        df = pd.read_excel('ARClean_temp.xlsx')
+        try:
+            df = pd.read_excel('ARClean_temp.xlsx', engine='calamine')
+        except Exception:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                df = pd.read_excel('ARClean_temp.xlsx', engine='openpyxl')
 
         df_subset = df.iloc[:, :11]
         df_subset = df_subset.fillna('')
@@ -32,12 +40,25 @@ def sinkronkan_data_sheets():
             jumlah_baris = len(data_baru)
             print(f"--> Menuliskan {jumlah_baris} baris data baru mulai sel A2...")
             worksheet.update(range_name='A2', values=data_baru, value_input_option='USER_ENTERED')
-            print("--> Selesai! Data berhasil diperbarui di Google Sheets.")
+
+            bulan_indo = {
+                1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun',
+                7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'
+            }
+            sekarang = datetime.now()
+            nama_bulan = bulan_indo[sekarang.month]
+            waktu_pembaruan = sekarang.strftime(f"%d {nama_bulan} %Y - %H.%M")
+
+            print("--> Menuliskan waktu pembaruan ke sel L2...")
+            worksheet.update(range_name='L2', values=[[waktu_pembaruan]], value_input_option='USER_ENTERED')
+
+            print(f"--> Selesai! Data berhasil diperbarui di Google Sheets pada: {waktu_pembaruan}")
         else:
             print("--> File Excel tidak memiliki data untuk ditulis.")
 
     except Exception as e:
         print(f"--> Terjadi kesalahan: {e}")
+
 
 if __name__ == '__main__':
     sinkronkan_data_sheets()

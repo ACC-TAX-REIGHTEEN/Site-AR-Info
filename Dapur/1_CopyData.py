@@ -1,6 +1,6 @@
 import configparser
 import os
-import shutil
+import warnings
 import pandas as pd
 
 
@@ -40,7 +40,17 @@ def process_arvi_source(excel_path, sheet_name, output_file="ARClean_temp.xlsx")
         f"--> Memproses sheet '{sheet_name}' dari '{excel_path}' ->"
         f" '{output_file}'..."
     )
-    df_raw = pd.read_excel(excel_path, sheet_name=sheet_name, header=None)
+    try:
+        df_raw = pd.read_excel(
+            excel_path, sheet_name=sheet_name, header=None, engine="calamine"
+        )
+    except Exception:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            df_raw = pd.read_excel(
+                excel_path, sheet_name=sheet_name, header=None, engine="openpyxl"
+            )
+
     header_idx = auto_detect_header_row(df_raw)
     df_clean = df_raw.iloc[header_idx + 1 :].copy()
     df_clean.columns = df_raw.iloc[header_idx].astype(str).str.strip()
@@ -50,6 +60,7 @@ def process_arvi_source(excel_path, sheet_name, output_file="ARClean_temp.xlsx")
         f"--> Sheet '{sheet_name}' berhasil diekstrak & dibersihkan ke"
         f" '{output_file}'!"
     )
+
 
 def run_preparation():
     print("--> Memulai proses salin data dan ekstraksi")
