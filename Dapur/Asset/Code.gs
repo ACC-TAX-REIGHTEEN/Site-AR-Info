@@ -77,6 +77,7 @@ function getARData(username) {
   var userHari = '';
   var hasSummaryAccess = false;
   var hasWatchlistAccess = false;
+  var hasNopelAccess = false;
   
   var cleanUsername = String(username || '').trim().toUpperCase();
 
@@ -113,6 +114,9 @@ function getARData(username) {
 
       var watchlistVal = String(confData[i][8] || '').trim().toUpperCase();
       hasWatchlistAccess = (watchlistVal === 'YA');
+
+      var nopelVal = String(confData[i][9] || '').trim();
+      hasNopelAccess = (nopelVal !== '');
       break;
     }
   }
@@ -256,8 +260,8 @@ function getARData(username) {
   
   var bankMap = {};
   for (var b = 1; b < confData.length; b++) {
-    var depoCode = String(confData[b][9] || '').trim();
-    var bankInfo = String(confData[b][10] || '').trim();
+    var depoCode = String(confData[b][14] || '').trim();
+    var bankInfo = String(confData[b][15] || '').trim();
     if (depoCode && bankInfo) {
       if (!bankMap[depoCode]) bankMap[depoCode] = [];
       if (bankMap[depoCode].indexOf(bankInfo) === -1) {
@@ -304,6 +308,7 @@ function getARData(username) {
     isInv: isInv,
     hasSummaryAccess: hasSummaryAccess,
     hasWatchlistAccess: hasWatchlistAccess,
+    hasNopelAccess: hasNopelAccess,
     hasWatermark: hasWatermark,
     cloudWatchlist: cloudWatchlist,
     waktuPembaruan: waktuPembaruan
