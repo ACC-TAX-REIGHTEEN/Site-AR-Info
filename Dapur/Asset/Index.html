@@ -173,12 +173,17 @@
       </div>
 
       <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 mb-4">
-        <div class="p-3.5 sm:p-4 bg-gray-50 border-b flex justify-between items-center">
+        <div class="p-3.5 sm:p-4 bg-gray-50 border-b flex flex-wrap justify-between items-center gap-2">
           <div>
             <h3 class="font-bold text-xs sm:text-sm text-gray-700">Daftar Piutang / AR</h3>
             <p id="displayWaktuPembaruan" class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5">Pembaruan Data: Memuat...</p>
           </div>
-          <button onclick="toggleSelectAllRows()" id="btnSelectAllRows" class="text-[11px] sm:text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg">Pilih Semua Data</button>
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <button onclick="forceRefreshAllData()" id="btnForceRefresh" class="text-[11px] sm:text-xs bg-amber-100 text-amber-800 hover:bg-amber-200 font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg transition inline-flex items-center gap-1">
+              <span>🔄</span><span>Segarkan</span>
+            </button>
+            <button onclick="toggleSelectAllRows()" id="btnSelectAllRows" class="text-[11px] sm:text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg">Pilih Semua Data</button>
+          </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -676,6 +681,8 @@
 
     const NOPEL_DEBOUNCE_MS = 200;
     const NOPEL_RENDER_LIMIT = 100;
+	const LOCAL_CACHE_TTL_MS = 3 * 60 * 60 * 1000;
+    const LOCAL_CACHE_CHUNK_SIZE = 200000;
 
     let watchlistSelectedEntities = new Set();
     let isWatchlistSelectorOpen = true;
@@ -918,7 +925,104 @@
         .checkLogin(user, pass);
     }
 
+    function getLocalCacheKey(type) {
+      const safeUser = String(currentUser || '').trim().toUpperCase();
+      return `ptm_cache_${type}_v1_${safeUser}`;
+    }
+
+    function clearLocalChunkedCache(baseKey) {
+      try {
+        const metaRaw = localStorage.getItem(baseKey + '_meta');
+        if (metaRaw) {
+          const meta = JSON.parse(metaRaw);
+          if (meta && meta.count) {
+            for (let i = 0; i < meta.count; i++) {
+              localStorage.removeItem(baseKey + '_c_' + i);
+            }
+          }
+        }
+        localStorage.removeItem(baseKey + '_meta');
+      } catch (e) {}
+    }
+
+    function writeLocalChunkedCache(baseKey, dataObj) {
+      try {
+        clearLocalChunkedCache(baseKey);
+        const jsonStr = JSON.stringify(dataObj);
+        const totalChunks = Math.ceil(jsonStr.length / LOCAL_CACHE_CHUNK_SIZE);
+
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * LOCAL_CACHE_CHUNK_SIZE;
+          localStorage.setItem(baseKey + '_c_' + i, jsonStr.substring(start, start + LOCAL_CACHE_CHUNK_SIZE));
+        }
+
+        localStorage.setItem(baseKey + '_meta', JSON.stringify({
+          count: totalChunks,
+          savedAt: Date.now()
+        }));
+        return true;
+      } catch (e) {
+        // Jika memori localStorage penuh, bersihkan sisa chunk agar tidak korup
+        clearLocalChunkedCache(baseKey);
+        return false;
+      }
+    }
+
+    function readLocalChunkedCache(baseKey, ttlMs) {
+      try {
+        const metaRaw = localStorage.getItem(baseKey + '_meta');
+        if (!metaRaw) return null;
+
+        const meta = JSON.parse(metaRaw);
+        if (!meta || !meta.count || !meta.savedAt) return null;
+
+        if ((Date.now() - meta.savedAt) > ttlMs) {
+          clearLocalChunkedCache(baseKey);
+          return null;
+        }
+
+        const parts = new Array(meta.count);
+        for (let i = 0; i < meta.count; i++) {
+          const chunk = localStorage.getItem(baseKey + '_c_' + i);
+          if (chunk === null) return null;
+          parts[i] = chunk;
+        }
+
+        return {
+          data: JSON.parse(parts.join('')),
+          savedAt: meta.savedAt
+        };
+      } catch (e) {
+        clearLocalChunkedCache(baseKey);
+        return null;
+      }
+    }
+
+    function clearAllUserLocalCaches() {
+      if (!currentUser) return;
+      clearLocalChunkedCache(getLocalCacheKey('ar'));
+      clearLocalChunkedCache(getLocalCacheKey('nopel'));
+    }
+
+    function setRefreshButtonState(isLoading) {
+      const btn = document.getElementById('btnForceRefresh');
+      if (!btn) return;
+      btn.disabled = isLoading;
+      btn.innerHTML = isLoading
+        ? '<span>⏳</span><span>Memuat...</span>'
+        : '<span>🔄</span><span>Segarkan</span>';
+    }
+
+    function forceRefreshAllData() {
+      clearAllUserLocalCaches();
+      rawNopelData = [];
+      isNopelLoaded = false;
+      showToast('Menyegarkan data Piutang & Nopel terbaru dari server...', 'info', 2500);
+      loadARData(true);
+    }
+
     function handleLogout() {
+      clearAllUserLocalCaches();
       localStorage.removeItem('ptm_ar_user');
       currentUser = '';
       rawNopelData = [];
@@ -936,85 +1040,134 @@
       rawNopelData = [];
       isNopelLoaded = false;
       nopelWaktuPembaruanData = '-';
-      loadARData();
+      loadARData(false);
     }
 
-    function loadARData() {
+    function applyARDataPayload(res, isFromLocalCache) {
+      rawARData = res.items || [];
+      bankOptions = res.bankOptions || [];
+      isInvUser = res.isInv || false;
+      hasSummaryAccess = res.hasSummaryAccess || false;
+      hasWatchlistAccess = res.hasWatchlistAccess || false;
+      hasNopelAccess = res.hasNopelAccess || false;
+      hasWatermarkAccess = res.hasWatermark || false;
+
+      waktuPembaruanData = res.waktuPembaruan || '-';
+      const displayEl = document.getElementById('displayWaktuPembaruan');
+      if (displayEl) {
+        const tag = isFromLocalCache ? ' (Memori Lokal)' : '';
+        displayEl.innerText = 'Pembaruan Data: ' + waktuPembaruanData + tag;
+      }
+
+      const setFeatureBtnState = (el, isVisible) => {
+        if (!el) return;
+        if (isVisible) {
+          el.classList.remove('hidden');
+          el.classList.add('inline-flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('inline-flex');
+        }
+      };
+
+      setFeatureBtnState(document.getElementById('btnSummaryFeature'), hasSummaryAccess);
+      setFeatureBtnState(document.getElementById('btnWatchlistFeature'), hasWatchlistAccess);
+      setFeatureBtnState(document.getElementById('btnNopelFeature'), hasNopelAccess);
+
+      const featureGroup = document.getElementById('headerFeatureGroup');
+      if (featureGroup) {
+        if (hasNopelAccess || hasWatchlistAccess || hasSummaryAccess) {
+          featureGroup.classList.remove('hidden');
+          featureGroup.classList.add('flex');
+        } else {
+          featureGroup.classList.add('hidden');
+          featureGroup.classList.remove('flex');
+        }
+      }
+
+      if (hasNopelAccess && Array.isArray(res.nopelItems)) {
+        prepareNopelData(res.nopelItems, res.nopelWaktuPembaruan);
+      } else {
+        rawNopelData = [];
+        nopelWaktuPembaruanData = '-';
+        isNopelLoaded = false;
+      }
+
+      const mainJtBox = document.getElementById('mainTotalJTContainer');
+      const prevJtBox = document.getElementById('prevTotalJTContainer');
+      
+      if (isInvUser) {
+        if (mainJtBox) mainJtBox.style.display = 'none';
+        if (prevJtBox) prevJtBox.style.display = 'none';
+      } else {
+        if (mainJtBox) mainJtBox.style.display = 'block';
+        if (prevJtBox) prevJtBox.style.display = 'inline-flex';
+      }
+
+      buildFilterEntities();
+      reconcileWatchlistCloudAndLocal(res.cloudWatchlist || []);
+      renderARTable();
+    }
+
+    function loadARData(forceRefresh = false) {
+      if (!forceRefresh) {
+        const cachedAR = readLocalChunkedCache(getLocalCacheKey('ar'), LOCAL_CACHE_TTL_MS);
+        if (cachedAR && cachedAR.data) {
+          const payload = Object.assign({}, cachedAR.data);
+          if (payload.hasNopelAccess) {
+            const cachedNopel = readLocalChunkedCache(getLocalCacheKey('nopel'), LOCAL_CACHE_TTL_MS);
+            if (cachedNopel && cachedNopel.data) {
+              payload.nopelItems = cachedNopel.data.items || [];
+              payload.nopelWaktuPembaruan = cachedNopel.data.waktuPembaruan || '-';
+            }
+          }
+          applyARDataPayload(payload, true);
+          return;
+        }
+      }
+
+      setRefreshButtonState(true);
+
       google.script.run
         .withSuccessHandler(function(res) {
+          setRefreshButtonState(false);
+
           if (res && res.success === false) {
             showToast(res.message, 'error');
             handleLogout();
             return;
           }
 
-          rawARData = res.items || [];
-          bankOptions = res.bankOptions || [];
-          isInvUser = res.isInv || false;
-          hasSummaryAccess = res.hasSummaryAccess || false;
-          hasWatchlistAccess = res.hasWatchlistAccess || false;
-          hasNopelAccess = res.hasNopelAccess || false;
-          hasWatermarkAccess = res.hasWatermark || false;
+          writeLocalChunkedCache(getLocalCacheKey('ar'), {
+            items: res.items || [],
+            bankOptions: res.bankOptions || [],
+            isInv: res.isInv || false,
+            hasSummaryAccess: res.hasSummaryAccess || false,
+            hasWatchlistAccess: res.hasWatchlistAccess || false,
+            hasNopelAccess: res.hasNopelAccess || false,
+            hasWatermark: res.hasWatermark || false,
+            cloudWatchlist: res.cloudWatchlist || [],
+            waktuPembaruan: res.waktuPembaruan || '-'
+          });
 
-          waktuPembaruanData = res.waktuPembaruan || '-';
-          const displayEl = document.getElementById('displayWaktuPembaruan');
-          if (displayEl) {
-            displayEl.innerText = 'Pembaruan Data: ' + waktuPembaruanData;
+          if (res.hasNopelAccess && Array.isArray(res.nopelItems)) {
+            writeLocalChunkedCache(getLocalCacheKey('nopel'), {
+              items: res.nopelItems,
+              waktuPembaruan: res.nopelWaktuPembaruan || '-'
+            });
           }
 
-          const setFeatureBtnState = (el, isVisible) => {
-            if (!el) return;
-            if (isVisible) {
-              el.classList.remove('hidden');
-              el.classList.add('inline-flex');
-            } else {
-              el.classList.add('hidden');
-              el.classList.remove('inline-flex');
-            }
-          };
+          applyARDataPayload(res, false);
 
-          setFeatureBtnState(document.getElementById('btnSummaryFeature'), hasSummaryAccess);
-          setFeatureBtnState(document.getElementById('btnWatchlistFeature'), hasWatchlistAccess);
-          setFeatureBtnState(document.getElementById('btnNopelFeature'), hasNopelAccess);
-
-          const featureGroup = document.getElementById('headerFeatureGroup');
-          if (featureGroup) {
-            if (hasNopelAccess || hasWatchlistAccess || hasSummaryAccess) {
-              featureGroup.classList.remove('hidden');
-              featureGroup.classList.add('flex');
-            } else {
-              featureGroup.classList.add('hidden');
-              featureGroup.classList.remove('flex');
-            }
+          if (forceRefresh) {
+            showToast('Data Piutang & Nopel berhasil disegarkan!', 'success');
           }
-
-          if (hasNopelAccess && Array.isArray(res.nopelItems)) {
-            prepareNopelData(res.nopelItems, res.nopelWaktuPembaruan);
-          } else {
-            rawNopelData = [];
-            nopelWaktuPembaruanData = '-';
-            isNopelLoaded = false;
-          }
-
-          const mainJtBox = document.getElementById('mainTotalJTContainer');
-          const prevJtBox = document.getElementById('prevTotalJTContainer');
-          
-          if (isInvUser) {
-            if (mainJtBox) mainJtBox.style.display = 'none';
-            if (prevJtBox) prevJtBox.style.display = 'none';
-          } else {
-            if (mainJtBox) mainJtBox.style.display = 'block';
-            if (prevJtBox) prevJtBox.style.display = 'inline-flex';
-          }
-
-          buildFilterEntities();
-          reconcileWatchlistCloudAndLocal(res.cloudWatchlist || []);
-          renderARTable();
         })
         .withFailureHandler(function(err) {
+          setRefreshButtonState(false);
           showToast('Gagal terhubung ke server: ' + err.message, 'error');
         })
-        .getARData(currentUser);
+        .getARData(currentUser, Boolean(forceRefresh));
     }
 
     function prepareNopelData(items, waktuPembaruan) {
@@ -2185,6 +2338,7 @@
       watermarkTileCache.dataUrl = tileCanvas.toDataURL('image/png');
       watermarkTileCache.tileW = tileW;
       watermarkTileCache.tileH = tileH;
+	  watermarkTileCache.dpr = dpr;
 
       return watermarkTileCache;
     }
@@ -2206,7 +2360,7 @@
       overlay.classList.remove('hidden');
     }
 
-    function compositeWatermarkOnCanvas(targetCanvas) {
+    function compositeWatermarkOnCanvas(targetCanvas, logicalWidth) {
       if (!hasWatermarkAccess || !targetCanvas) return;
       const tile = getWatermarkTileData();
       if (!tile || !tile.tileCanvas) return;
@@ -2215,10 +2369,15 @@
       const pattern = ctx.createPattern(tile.tileCanvas, 'repeat');
       if (!pattern) return;
 
+      const baseWidth = logicalWidth || 1000;
+      const tileDpr = tile.dpr || 2;
+      const actualScale = targetCanvas.width / baseWidth;
+      const patternScale = actualScale / tileDpr;
+
       ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.setTransform(patternScale, 0, 0, patternScale, 0, 0);
       ctx.fillStyle = pattern;
-      ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+      ctx.fillRect(0, 0, targetCanvas.width / patternScale, targetCanvas.height / patternScale);
       ctx.restore();
     }
 
@@ -2519,6 +2678,7 @@
 
       element.style.width = '1000px';
       element.style.minWidth = '1000px';
+      const logicalWidth = element.offsetWidth || 1000;
 
       return html2canvas(element, {
         scale: 2,
@@ -2530,7 +2690,7 @@
         hiddenBankItems.forEach(item => {
           item.style.display = '';
         });
-        compositeWatermarkOnCanvas(canvas);
+        compositeWatermarkOnCanvas(canvas, logicalWidth);
         return canvas;
       }).catch(err => {
         element.style.width = originalWidth;

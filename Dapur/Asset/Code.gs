@@ -1,9 +1,79 @@
+var CACHE_TTL_SECONDS = 10800;
+var CACHE_CHUNK_SIZE = 75000;
+
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
     .setTitle('Site AR - PT PRIMA TUNGGAL MANDIRI')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function setChunkedCache_(cache, baseKey, dataObj, ttlSeconds) {
+  try {
+    clearChunkedCache_(cache, baseKey);
+    var jsonStr = JSON.stringify(dataObj);
+    var totalChunks = Math.ceil(jsonStr.length / CACHE_CHUNK_SIZE);
+    var chunkMap = {};
+
+    for (var i = 0; i < totalChunks; i++) {
+      var start = i * CACHE_CHUNK_SIZE;
+      chunkMap[baseKey + '_c_' + i] = jsonStr.substring(start, start + CACHE_CHUNK_SIZE);
+    }
+    chunkMap[baseKey + '_meta'] = JSON.stringify({
+      count: totalChunks,
+      savedAt: Date.now()
+    });
+
+    cache.putAll(chunkMap, ttlSeconds);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function getChunkedCache_(cache, baseKey) {
+  try {
+    var metaRaw = cache.get(baseKey + '_meta');
+    if (!metaRaw) return null;
+
+    var meta = JSON.parse(metaRaw);
+    if (!meta || !meta.count) return null;
+
+    var keys = [];
+    for (var i = 0; i < meta.count; i++) {
+      keys.push(baseKey + '_c_' + i);
+    }
+
+    var chunks = cache.getAll(keys);
+    var parts = [];
+    for (var j = 0; j < meta.count; j++) {
+      var part = chunks[keys[j]];
+      if (part === undefined || part === null) return null;
+      parts.push(part);
+    }
+
+    return JSON.parse(parts.join(''));
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearChunkedCache_(cache, baseKey) {
+  try {
+    var metaRaw = cache.get(baseKey + '_meta');
+    var keysToRemove = [baseKey + '_meta'];
+    if (metaRaw) {
+      var meta = JSON.parse(metaRaw);
+      if (meta && meta.count) {
+        for (var i = 0; i < meta.count; i++) {
+          keysToRemove.push(baseKey + '_c_' + i);
+        }
+      }
+    }
+    cache.removeAll(keysToRemove);
+  } catch (e) {
+  }
 }
 
 function checkLogin(username, password) {
@@ -59,7 +129,59 @@ function formatDate(val) {
   return String(val);
 }
 
-function getARData(username) {
+function getARData(username, forceRefresh) {
+  var cleanUsername = String(username || '').trim().toUpperCase();
+  var isForce = Boolean(forceRefresh);
+
+  var cache = CacheService.getScriptCache();
+  var arCacheKey = 'PTM_AR_V1_' + cleanUsername;
+  var nopelCacheKey = 'PTM_NOPEL_V1_' + cleanUsername;
+
+  if (isForce) {
+    clearChunkedCache_(cache, arCacheKey);
+    clearChunkedCache_(cache, nopelCacheKey);
+  }
+
+  var cachedAR = isForce ? null : getChunkedCache_(cache, arCacheKey);
+  if (cachedAR) {
+    var cachedNopel = null;
+    if (cachedAR.hasNopelAccess) {
+      cachedNopel = getChunkedCache_(cache, nopelCacheKey);
+      if (!cachedNopel && typeof buildNopelPayload_ === 'function') {
+        var ssFallback = SpreadsheetApp.getActiveSpreadsheet();
+        var nopelFresh = buildNopelPayload_(ssFallback, cachedAR._nopelPrefix || '', cachedAR._nopelSales || '');
+        if (nopelFresh && nopelFresh.success) {
+          cachedNopel = {
+            items: nopelFresh.items || [],
+            waktuPembaruan: nopelFresh.waktuPembaruan || '-'
+          };
+          setChunkedCache_(cache, nopelCacheKey, cachedNopel, CACHE_TTL_SECONDS);
+        }
+      }
+    }
+
+    var liveWatchlist = [];
+    if (cachedAR.hasWatchlistAccess && typeof getUserWatchlistFromCloud === 'function') {
+      liveWatchlist = getUserWatchlistFromCloud(cleanUsername);
+    }
+
+    return {
+      success: true,
+      fromServerCache: true,
+      items: cachedAR.items || [],
+      bankOptions: cachedAR.bankOptions || [],
+      isInv: cachedAR.isInv || false,
+      hasSummaryAccess: cachedAR.hasSummaryAccess || false,
+      hasWatchlistAccess: cachedAR.hasWatchlistAccess || false,
+      hasNopelAccess: cachedAR.hasNopelAccess || false,
+      hasWatermark: cachedAR.hasWatermark || false,
+      cloudWatchlist: liveWatchlist,
+      waktuPembaruan: cachedAR.waktuPembaruan || '-',
+      nopelItems: cachedNopel ? (cachedNopel.items || []) : [],
+      nopelWaktuPembaruan: cachedNopel ? (cachedNopel.waktuPembaruan || '-') : '-'
+    };
+  }
+
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var confSheet = ss.getSheetByName('conf');
   var piutangSheet = ss.getSheetByName('Piutang');
@@ -80,8 +202,6 @@ function getARData(username) {
   var hasNopelAccess = false;
   var userNopelPrefix = '';
   var userNopelSales = '';
-  
-  var cleanUsername = String(username || '').trim().toUpperCase();
 
   var hasWatermark = false;
   var watermarkColIdx = -1;
@@ -140,7 +260,7 @@ function getARData(username) {
   var isInv = userHari.toLowerCase() === 'inv';
   
   var today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
 
   var piutangValues = piutangSheet.getDataRange().getValues();
   var filteredRows = [];
@@ -313,9 +433,31 @@ function getARData(username) {
       nopelWaktuPembaruan = nopelRes.waktuPembaruan || '-';
     }
   }
+
+  var arToCache = {
+    items: filteredRows,
+    bankOptions: bankOptions,
+    isInv: isInv,
+    hasSummaryAccess: hasSummaryAccess,
+    hasWatchlistAccess: hasWatchlistAccess,
+    hasNopelAccess: hasNopelAccess,
+    hasWatermark: hasWatermark,
+    waktuPembaruan: waktuPembaruan,
+    _nopelPrefix: userNopelPrefix,
+    _nopelSales: userNopelSales
+  };
+  setChunkedCache_(cache, arCacheKey, arToCache, CACHE_TTL_SECONDS);
+
+  if (hasNopelAccess) {
+    setChunkedCache_(cache, nopelCacheKey, {
+      items: nopelItems,
+      waktuPembaruan: nopelWaktuPembaruan
+    }, CACHE_TTL_SECONDS);
+  }
   
   return {
     success: true,
+    fromServerCache: false,
     items: filteredRows,
     bankOptions: bankOptions,
     isInv: isInv,
