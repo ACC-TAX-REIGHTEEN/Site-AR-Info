@@ -9,6 +9,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <style type="text/tailwindcss">
+    @layer base {
+      img {
+        display: inline-block;
+      }
+    }
+  </style>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { 
@@ -42,13 +50,48 @@
 
     .watermark-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
       user-select: none;
       z-index: 20;
+    }
+
+    .bank-check-box {
+      position: relative;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      border: 1.5px solid #9ca3af;
+      background-color: #ffffff;
+      box-sizing: border-box;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .bank-check-box.is-checked {
+      background-color: #0b2545;
+      border-color: #0b2545;
+    }
+    .bank-check-box.is-checked.is-locked {
+      background-color: #1e3a5f;
+      border-color: #1e3a5f;
+    }
+    .bank-check-mark {
+      position: absolute;
+      left: 4.5px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border-right: 2px solid #ffffff;
+      border-bottom: 2px solid #ffffff;
+      box-sizing: border-box;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+    .bank-check-box.is-checked .bank-check-mark {
+      opacity: 1;
     }
   </style>
 </head>
@@ -83,24 +126,28 @@
 
   <div id="mainSection" class="hidden min-h-screen flex flex-col">
     <header class="bg-navy text-white shadow-md sticky top-0 z-20">
-      <div class="max-w-7xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2">
-        <div class="flex items-center space-x-2">
-          <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" class="h-7 sm:h-8 object-contain bg-white rounded p-1">
-          <span class="font-bold text-xs sm:text-lg tracking-wide hidden xs:inline sm:inline">PT PRIMA TUNGGAL MANDIRI</span>
+      <div class="max-w-7xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap lg:flex-nowrap items-center justify-between gap-x-2 gap-y-2">
+        <div class="flex items-center gap-2 shrink-0 order-1">
+          <img src="https://raw.githubusercontent.com/ACC-TAX-REIGHTEEN/Site-AR-Info/refs/heads/main/Dapur/Asset/logo-nav.png" class="h-7 sm:h-8 object-contain bg-white rounded p-1 shrink-0">
+          <span class="font-bold text-sm sm:text-base lg:text-lg tracking-wide hidden sm:inline whitespace-nowrap">PT PRIMA TUNGGAL MANDIRI</span>
         </div>
-        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <button id="btnNopelFeature" onclick="openNopelModal()" class="hidden text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
-            🆔 Nopel
+
+        <div id="headerFeatureGroup" class="hidden order-3 lg:order-2 w-full lg:w-auto lg:ml-auto lg:mr-1 items-center gap-1.5 sm:gap-2 pt-2 border-t border-white/10 lg:pt-0 lg:border-t-0">
+          <button id="btnNopelFeature" onclick="openNopelModal()" class="hidden flex-1 lg:flex-none items-center justify-center gap-1 h-8 text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 rounded-lg transition shadow whitespace-nowrap">
+            <span>🆔</span><span>Nopel</span>
           </button>
-          <button id="btnWatchlistFeature" onclick="openWatchlistModal()" class="hidden text-[11px] sm:text-xs bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
-            📌 Watchlist
+          <button id="btnWatchlistFeature" onclick="openWatchlistModal()" class="hidden flex-1 lg:flex-none items-center justify-center gap-1 h-8 text-[11px] sm:text-xs bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-2.5 rounded-lg transition shadow whitespace-nowrap">
+            <span>📌</span><span>Watchlist</span>
           </button>
-          <button id="btnSummaryFeature" onclick="openSummaryModal()" class="hidden text-[11px] sm:text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1.5 rounded-lg transition shadow">
-            📊 Ringkasan
+          <button id="btnSummaryFeature" onclick="openSummaryModal()" class="hidden flex-1 lg:flex-none items-center justify-center gap-1 h-8 text-[11px] sm:text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 rounded-lg transition shadow whitespace-nowrap">
+            <span>📊</span><span>Ringkasan</span>
           </button>
-          <span id="displayUser" class="text-[11px] sm:text-xs font-semibold bg-blue-900 px-2.5 py-1 rounded-full border border-blue-700"></span>
-          <button onclick="openChangePasswordModal()" class="text-[10px] sm:text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1.5 rounded-lg transition">Sandi</button>
-          <button onclick="handleLogout()" class="text-[10px] sm:text-xs bg-red-600 hover:bg-red-700 px-2 py-1.5 rounded-lg transition">Keluar</button>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 order-2 lg:order-3 lg:pl-2 lg:border-l lg:border-white/15">
+          <span id="displayUser" class="inline-flex items-center h-8 max-w-[125px] sm:max-w-[180px] truncate text-[11px] sm:text-xs font-semibold bg-blue-900 px-2.5 rounded-lg border border-blue-700 whitespace-nowrap"></span>
+          <button onclick="openChangePasswordModal()" class="inline-flex items-center justify-center h-8 text-[11px] sm:text-xs font-medium bg-gray-700 hover:bg-gray-600 px-2.5 rounded-lg transition whitespace-nowrap">Sandi</button>
+          <button onclick="handleLogout()" class="inline-flex items-center justify-center h-8 text-[11px] sm:text-xs font-medium bg-red-600 hover:bg-red-700 px-2.5 rounded-lg transition whitespace-nowrap">Keluar</button>
         </div>
       </div>
     </header>
@@ -182,7 +229,7 @@
     </div>
   </div>
 
-  <div id="nopelModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+  <div id="nopelModal" class="fixed inset-0 bg-black/65 sm:bg-black/60 sm:backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-consistent-h flex flex-col overflow-hidden relative">
       <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
         <div>
@@ -200,7 +247,7 @@
             🔍 Cari Pelanggan (No. Pelanggan. / Nama Pelanggan / Nama Kontak):
           </label>
           <div class="flex gap-2">
-            <input type="text" id="nopelSearchInput" oninput="filterNopelTable()" placeholder="Ketik No. Pelanggan, Nama Pelanggan, atau Nama Kontak..." class="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <input type="text" id="nopelSearchInput" oninput="handleNopelSearchInput()" placeholder="Ketik No. Pelanggan, Nama Pelanggan, atau Nama Kontak..." class="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
             <button type="button" onclick="clearNopelSearch()" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-xl transition shrink-0">
               Reset
             </button>
@@ -250,7 +297,7 @@
     </div>
   </div>
 
-  <div id="watchlistModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+  <div id="watchlistModal" class="fixed inset-0 bg-black/65 sm:bg-black/60 sm:backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-consistent-h flex flex-col overflow-hidden relative">
       <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
         <div>
@@ -277,14 +324,14 @@
                 <span id="watchlistSelectedBadge" class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full">0 dipilih</span>
               </button>
 
-              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <button type="button" onclick="forceSyncWatchlistToCloud()" class="text-[11px] sm:text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Sinkronkan ke Cloud sekarang">
+              <div class="w-full sm:w-auto grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2">
+                <button type="button" onclick="forceSyncWatchlistToCloud()" class="h-8 text-[11px] sm:text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-2.5 rounded-lg shadow-sm transition inline-flex items-center justify-center gap-1 whitespace-nowrap" title="Sinkronkan ke Cloud sekarang">
                   ☁️ Sync Cloud
                 </button>
-                <button type="button" onclick="exportWatchlistData()" class="text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                <button type="button" onclick="exportWatchlistData()" class="h-8 text-[11px] sm:text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 rounded-lg shadow-sm transition inline-flex items-center justify-center gap-1 whitespace-nowrap">
                   📤 Export
                 </button>
-                <button type="button" onclick="triggerImportWatchlist()" class="text-[11px] sm:text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                <button type="button" onclick="triggerImportWatchlist()" class="h-8 text-[11px] sm:text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 rounded-lg shadow-sm transition inline-flex items-center justify-center gap-1 whitespace-nowrap">
                   📥 Import
                 </button>
                 <input type="file" id="watchlistImportFileInput" accept=".json,application/json" class="hidden" onchange="importWatchlistData(event)">
@@ -362,7 +409,7 @@
     </div>
   </div>
 
-  <div id="summaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+  <div id="summaryModal" class="fixed inset-0 bg-black/65 sm:bg-black/60 sm:backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl modal-consistent-h flex flex-col overflow-hidden relative">
       <div class="p-3.5 sm:p-4 bg-navy text-white flex justify-between items-center shrink-0">
         <h3 class="font-bold text-sm sm:text-lg flex items-center gap-2">
@@ -468,7 +515,7 @@
     </div>
   </div>
 
-  <div id="previewModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
+  <div id="previewModal" class="fixed inset-0 bg-black/65 sm:bg-black/60 sm:backdrop-blur-sm hidden z-50 flex justify-center items-center p-2 sm:p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-consistent-h flex flex-col overflow-hidden">
       <div class="p-3 sm:p-4 bg-gray-100 border-b flex justify-between items-center shrink-0">
         <h3 class="font-bold text-xs sm:text-base text-gray-800">Pratinjau & Unduh File Gambar</h3>
@@ -513,7 +560,7 @@
       <div class="p-2 sm:p-6 overflow-x-auto overflow-y-auto flex-grow bg-gray-50/50" id="previewCanvasArea">
         <div id="exportContainer" class="relative overflow-hidden p-4 sm:p-6 bg-white border border-gray-200 rounded-lg min-w-[750px] sm:min-w-0 shadow-sm">
           
-          <canvas id="watermarkCanvas" class="watermark-overlay hidden"></canvas>
+          <div id="watermarkOverlay" data-html2canvas-ignore="true" class="watermark-overlay hidden"></div>
 
           <div class="text-center mb-5">
             <h2 class="text-xl font-bold text-navy uppercase tracking-wider">PT PRIMA TUNGGAL MANDIRI</h2>
@@ -562,7 +609,7 @@
             <h4 class="font-bold text-gray-800 mb-2">Informasi Pembayaran (Bank):</h4>
             <div id="bankContainer" class="space-y-2">
             </div>
-            <p class="mt-2 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT PRIMA TUNGGAL MANDIRI</span></p>
+            <p class="mt-2.5 text-[11px] text-gray-500 font-semibold">Atas Nama: <span class="text-navy font-bold">PT PRIMA TUNGGAL MANDIRI</span></p>
           </div>
 
           <div id="previewClosingBox" class="hidden mt-4 pt-3 border-t border-dashed border-gray-300 text-left text-xs text-gray-800 leading-relaxed">
@@ -573,15 +620,15 @@
         </div>
       </div>
 
-      <div class="p-3 sm:p-4 bg-gray-100 border-t flex flex-wrap justify-end gap-2 sm:gap-2.5 shrink-0">
-        <button onclick="closePreviewModal()" class="px-3.5 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl">Batal</button>
-        <button id="btnShareImage" onclick="shareAsImage()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow items-center gap-1.5 transition">
+      <div class="p-3 sm:p-4 bg-gray-100 border-t flex flex-wrap sm:flex-nowrap justify-end items-center gap-2 shrink-0">
+        <button onclick="closePreviewModal()" class="flex-1 sm:flex-none h-9 inline-flex items-center justify-center px-3.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold rounded-xl whitespace-nowrap">Batal</button>
+        <button id="btnShareImage" onclick="shareAsImage()" class="hidden flex-1 sm:flex-none h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow items-center justify-center gap-1.5 transition whitespace-nowrap">
           <span>📲</span> <span id="btnShareText">Bagikan Langsung</span>
         </button>
-        <button id="btnCopyImagePC" onclick="copyImageToClipboardPC()" class="hidden px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow items-center gap-1.5 transition">
+        <button id="btnCopyImagePC" onclick="copyImageToClipboardPC()" class="hidden flex-1 sm:flex-none h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow items-center justify-center gap-1.5 transition whitespace-nowrap">
           <span>📋</span> <span id="btnCopyImagePCText">Salin Gambar (Copy)</span>
         </button>
-        <button id="btnDownloadImage" onclick="downloadAsImage()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition">Unduh Gambar</button>
+        <button id="btnDownloadImage" onclick="downloadAsImage()" class="flex-1 sm:flex-none h-9 inline-flex items-center justify-center px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition whitespace-nowrap">Unduh Gambar</button>
       </div>
     </div>
   </div>
@@ -624,6 +671,11 @@
     let rawNopelData = [];
     let isNopelLoaded = false;
     let isNopelLoading = false;
+    let nopelWaktuPembaruanData = '-';
+    let nopelSearchDebounceTimer = null;
+
+    const NOPEL_DEBOUNCE_MS = 200;
+    const NOPEL_RENDER_LIMIT = 100;
 
     let watchlistSelectedEntities = new Set();
     let isWatchlistSelectorOpen = true;
@@ -651,6 +703,17 @@
     let isGreetingEnabled = false;
     let isClosingEnabled = false;
     let cachedShareFile = null;
+
+    let cachedMobileShareSupport = null;
+    let cachedPCClipboardSupport = null;
+
+    const watermarkTileCache = {
+      key: null,
+      tileCanvas: null,
+      dataUrl: '',
+      tileW: 190,
+      tileH: 100
+    };
 
     function showToast(message, type = 'info', duration = 3500) {
       const container = document.getElementById('toastContainer');
@@ -720,6 +783,15 @@
       setTimeout(removeToast, duration);
     }
 
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     window.onload = function() {
       const savedUser = localStorage.getItem('ptm_ar_user');
       const savedGreetingPref = localStorage.getItem('ptm_ar_greeting_enabled');
@@ -740,25 +812,37 @@
     }
 
     function isMobileShareSupported() {
+      if (cachedMobileShareSupport !== null) return cachedMobileShareSupport;
       try {
-        if (!isMobileDeviceEnvironment()) return false;
-        if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
-
+        if (!isMobileDeviceEnvironment()) {
+          cachedMobileShareSupport = false;
+          return false;
+        }
+        if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') {
+          cachedMobileShareSupport = false;
+          return false;
+        }
         const dummyBlob = new Blob(['test'], { type: 'image/png' });
         const dummyFile = new File([dummyBlob], 'test.png', { type: 'image/png' });
-        return navigator.canShare({ files: [dummyFile] });
+        cachedMobileShareSupport = Boolean(navigator.canShare({ files: [dummyFile] }));
       } catch (e) {
-        return false;
+        cachedMobileShareSupport = false;
       }
+      return cachedMobileShareSupport;
     }
 
     function isPCClipboardImageSupported() {
+      if (cachedPCClipboardSupport !== null) return cachedPCClipboardSupport;
       try {
-        if (isMobileDeviceEnvironment()) return false;
-        return Boolean(navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof window.ClipboardItem !== 'undefined');
+        if (isMobileDeviceEnvironment()) {
+          cachedPCClipboardSupport = false;
+          return false;
+        }
+        cachedPCClipboardSupport = Boolean(navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof window.ClipboardItem !== 'undefined');
       } catch (e) {
-        return false;
+        cachedPCClipboardSupport = false;
       }
+      return cachedPCClipboardSupport;
     }
 
     function updateShareAndCopyButtonsVisibility() {
@@ -796,7 +880,6 @@
 
     function handlePreviewContentEdit() {
       invalidateShareCache();
-      renderWatermarkOverlay();
     }
 
     function handleLogin(e) {
@@ -840,6 +923,7 @@
       currentUser = '';
       rawNopelData = [];
       isNopelLoaded = false;
+      nopelWaktuPembaruanData = '-';
       document.getElementById('mainSection').classList.add('hidden');
       document.getElementById('loginSection').classList.remove('hidden');
       showToast('Anda telah keluar dari sesi.', 'info');
@@ -851,6 +935,7 @@
       document.getElementById('displayUser').innerText = '👤 ' + currentUser;
       rawNopelData = [];
       isNopelLoaded = false;
+      nopelWaktuPembaruanData = '-';
       loadARData();
     }
 
@@ -877,27 +962,38 @@
             displayEl.innerText = 'Pembaruan Data: ' + waktuPembaruanData;
           }
 
-          const btnSummary = document.getElementById('btnSummaryFeature');
-          if (hasSummaryAccess) {
-            btnSummary.classList.remove('hidden');
-          } else {
-            btnSummary.classList.add('hidden');
-          }
-
-          const btnWatchlist = document.getElementById('btnWatchlistFeature');
-          if (hasWatchlistAccess) {
-            btnWatchlist.classList.remove('hidden');
-          } else {
-            btnWatchlist.classList.add('hidden');
-          }
-
-          const btnNopel = document.getElementById('btnNopelFeature');
-          if (btnNopel) {
-            if (hasNopelAccess) {
-              btnNopel.classList.remove('hidden');
+          const setFeatureBtnState = (el, isVisible) => {
+            if (!el) return;
+            if (isVisible) {
+              el.classList.remove('hidden');
+              el.classList.add('inline-flex');
             } else {
-              btnNopel.classList.add('hidden');
+              el.classList.add('hidden');
+              el.classList.remove('inline-flex');
             }
+          };
+
+          setFeatureBtnState(document.getElementById('btnSummaryFeature'), hasSummaryAccess);
+          setFeatureBtnState(document.getElementById('btnWatchlistFeature'), hasWatchlistAccess);
+          setFeatureBtnState(document.getElementById('btnNopelFeature'), hasNopelAccess);
+
+          const featureGroup = document.getElementById('headerFeatureGroup');
+          if (featureGroup) {
+            if (hasNopelAccess || hasWatchlistAccess || hasSummaryAccess) {
+              featureGroup.classList.remove('hidden');
+              featureGroup.classList.add('flex');
+            } else {
+              featureGroup.classList.add('hidden');
+              featureGroup.classList.remove('flex');
+            }
+          }
+
+          if (hasNopelAccess && Array.isArray(res.nopelItems)) {
+            prepareNopelData(res.nopelItems, res.nopelWaktuPembaruan);
+          } else {
+            rawNopelData = [];
+            nopelWaktuPembaruanData = '-';
+            isNopelLoaded = false;
           }
 
           const mainJtBox = document.getElementById('mainTotalJTContainer');
@@ -921,8 +1017,39 @@
         .getARData(currentUser);
     }
 
+    function prepareNopelData(items, waktuPembaruan) {
+      rawNopelData = (items || []).map(function(item) {
+        const noPel = String(item.noPelanggan || '');
+        const namaPel = String(item.namaPelanggan || '');
+        const namaKon = String(item.namaKontak || '');
+        return {
+          noPelanggan: noPel,
+          namaPelanggan: namaPel,
+          telepon: String(item.telepon || ''),
+          namaKontak: namaKon,
+          status: String(item.status || ''),
+          sales: String(item.sales || ''),
+          _searchKey: (noPel + ' ' + namaPel + ' ' + namaKon).toLowerCase()
+        };
+      });
+
+      nopelWaktuPembaruanData = waktuPembaruan || '-';
+      isNopelLoaded = true;
+
+      const waktuEl = document.getElementById('nopelWaktuPembaruan');
+      if (waktuEl) {
+        waktuEl.innerText = 'Waktu Pembaruan: ' + nopelWaktuPembaruanData;
+      }
+    }
+
     function openNopelModal() {
       document.getElementById('nopelModal').classList.remove('hidden');
+
+      const waktuEl = document.getElementById('nopelWaktuPembaruan');
+      if (waktuEl) {
+        waktuEl.innerText = 'Waktu Pembaruan: ' + nopelWaktuPembaruanData;
+      }
+
       const searchInput = document.getElementById('nopelSearchInput');
       if (searchInput) {
         searchInput.value = '';
@@ -932,21 +1059,30 @@
       if (!isNopelLoaded && !isNopelLoading) {
         loadNopelDataFromServer();
       } else {
-        filterNopelTable();
+        filterNopelTable(false);
       }
     }
 
     function closeNopelModal() {
+      if (nopelSearchDebounceTimer) clearTimeout(nopelSearchDebounceTimer);
       document.getElementById('nopelModal').classList.add('hidden');
     }
 
     function clearNopelSearch() {
+      if (nopelSearchDebounceTimer) clearTimeout(nopelSearchDebounceTimer);
       const searchInput = document.getElementById('nopelSearchInput');
       if (searchInput) {
         searchInput.value = '';
         searchInput.focus();
       }
-      filterNopelTable();
+      filterNopelTable(false);
+    }
+
+    function handleNopelSearchInput() {
+      if (nopelSearchDebounceTimer) clearTimeout(nopelSearchDebounceTimer);
+      nopelSearchDebounceTimer = setTimeout(function() {
+        filterNopelTable(false);
+      }, NOPEL_DEBOUNCE_MS);
     }
 
     function loadNopelDataFromServer() {
@@ -964,20 +1100,13 @@
           if (!res || !res.success) {
             showToast((res && res.message) || 'Gagal memuat data Nopel.', 'error');
             if (tbody) {
-              tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">' + ((res && res.message) || 'Akses ditolak.') + '</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">' + escapeHtml((res && res.message) || 'Akses ditolak.') + '</td></tr>';
             }
             return;
           }
 
-          rawNopelData = res.items || [];
-          isNopelLoaded = true;
-
-          const waktuEl = document.getElementById('nopelWaktuPembaruan');
-          if (waktuEl) {
-            waktuEl.innerText = 'Waktu Pembaruan: ' + (res.waktuPembaruan || '-');
-          }
-
-          filterNopelTable();
+          prepareNopelData(res.items || [], res.waktuPembaruan);
+          filterNopelTable(false);
         })
         .withFailureHandler(function(err) {
           isNopelLoading = false;
@@ -989,14 +1118,14 @@
         .getNopelData(currentUser);
     }
 
-    function filterNopelTable() {
+    function filterNopelTable(showAll = false) {
       const tbody = document.getElementById('nopelTableBody');
       const badge = document.getElementById('nopelResultBadge');
       const statusEl = document.getElementById('nopelSearchStatus');
-      const query = (document.getElementById('nopelSearchInput').value || '').trim().toLowerCase();
+      const rawQuery = (document.getElementById('nopelSearchInput').value || '').trim();
+      const query = rawQuery.toLowerCase();
 
       if (!tbody) return;
-      tbody.innerHTML = '';
 
       if (query === '') {
         if (badge) badge.innerText = '0 ditampilkan';
@@ -1013,19 +1142,25 @@
         return;
       }
 
-      const matchedItems = rawNopelData.filter(function(item) {
-        const noPel = String(item.noPelanggan || '').toLowerCase();
-        const namaPel = String(item.namaPelanggan || '').toLowerCase();
-        const namaKon = String(item.namaKontak || '').toLowerCase();
-        return noPel.includes(query) || namaPel.includes(query) || namaKon.includes(query);
-      });
-
-      if (badge) badge.innerText = matchedItems.length + ' ditampilkan';
-      if (statusEl) {
-        statusEl.innerText = `Menampilkan ${matchedItems.length} hasil pencarian untuk "${document.getElementById('nopelSearchInput').value.trim()}".`;
+      const terms = query.split(/\s+/).filter(Boolean);
+      const matchedItems = [];
+      for (let i = 0; i < rawNopelData.length; i++) {
+        const item = rawNopelData[i];
+        let isMatch = true;
+        for (let t = 0; t < terms.length; t++) {
+          if (item._searchKey.indexOf(terms[t]) === -1) {
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) matchedItems.push(item);
       }
 
       if (matchedItems.length === 0) {
+        if (badge) badge.innerText = '0 ditampilkan';
+        if (statusEl) {
+          statusEl.innerText = `Tidak ditemukan hasil untuk "${rawQuery}".`;
+        }
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="p-8 text-center text-gray-400">
@@ -1036,19 +1171,48 @@
         return;
       }
 
-      matchedItems.forEach(function(item) {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-emerald-50/50 transition border-b';
-        tr.innerHTML = `
-          <td class="p-2.5 border border-gray-200 font-bold text-navy whitespace-nowrap">${item.noPelanggan}</td>
-          <td class="p-2.5 border border-gray-200 font-semibold text-gray-800 text-left whitespace-nowrap">${item.namaPelanggan}</td>
-          <td class="p-2.5 border border-gray-200 text-gray-700 whitespace-nowrap">${item.telepon || '-'}</td>
-          <td class="p-2.5 border border-gray-200 text-gray-700 text-left whitespace-nowrap">${item.namaKontak || '-'}</td>
-          <td class="p-2.5 border border-gray-200 font-medium text-emerald-700 whitespace-nowrap">${item.status || '-'}</td>
-          <td class="p-2.5 border border-gray-200 text-gray-600 whitespace-nowrap">${item.sales || '-'}</td>
+      const isTruncated = !showAll && matchedItems.length > NOPEL_RENDER_LIMIT;
+      const renderCount = isTruncated ? NOPEL_RENDER_LIMIT : matchedItems.length;
+
+      if (badge) {
+        badge.innerText = isTruncated
+          ? `${renderCount} dari ${matchedItems.length} cocok`
+          : `${matchedItems.length} ditampilkan`;
+      }
+      if (statusEl) {
+        statusEl.innerText = isTruncated
+          ? `Menampilkan ${renderCount} hasil teratas dari ${matchedItems.length} data cocok. Ketik lebih spesifik untuk mempersempit.`
+          : `Menampilkan ${matchedItems.length} hasil pencarian untuk "${rawQuery}".`;
+      }
+
+      const rowsHtml = new Array(renderCount);
+      for (let i = 0; i < renderCount; i++) {
+        const item = matchedItems[i];
+        rowsHtml[i] = `
+          <tr class="hover:bg-emerald-50/50 transition border-b">
+            <td class="p-2.5 border border-gray-200 font-bold text-navy whitespace-nowrap">${escapeHtml(item.noPelanggan)}</td>
+            <td class="p-2.5 border border-gray-200 font-semibold text-gray-800 text-left whitespace-nowrap">${escapeHtml(item.namaPelanggan)}</td>
+            <td class="p-2.5 border border-gray-200 text-gray-700 whitespace-nowrap">${escapeHtml(item.telepon || '-')}</td>
+            <td class="p-2.5 border border-gray-200 text-gray-700 text-left whitespace-nowrap">${escapeHtml(item.namaKontak || '-')}</td>
+            <td class="p-2.5 border border-gray-200 font-medium text-emerald-700 whitespace-nowrap">${escapeHtml(item.status || '-')}</td>
+            <td class="p-2.5 border border-gray-200 text-gray-600 whitespace-nowrap">${escapeHtml(item.sales || '-')}</td>
+          </tr>
         `;
-        tbody.appendChild(tr);
-      });
+      }
+
+      if (isTruncated) {
+        rowsHtml.push(`
+          <tr class="bg-emerald-50/70">
+            <td colspan="6" class="p-3 text-center">
+              <button type="button" onclick="filterNopelTable(true)" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition">
+                Tampilkan Semua (${matchedItems.length} data)
+              </button>
+            </td>
+          </tr>
+        `);
+      }
+
+      tbody.innerHTML = rowsHtml.join('');
     }
 
     function getWatchlistStorageKey() {
@@ -1890,47 +2054,39 @@
       }
     }
 
+    function applyGreetingUI(isEnabled) {
+      const box = document.getElementById('previewGreetingBox');
+      const cb = document.getElementById('toggleGreetingCheckbox');
+      if (cb) cb.checked = isEnabled;
+      if (box) box.classList.toggle('hidden', !isEnabled);
+    }
+
+    function applyClosingUI(isEnabled) {
+      const box = document.getElementById('previewClosingBox');
+      const cb = document.getElementById('toggleClosingCheckbox');
+      if (cb) cb.checked = isEnabled;
+      if (box) box.classList.toggle('hidden', !isEnabled);
+    }
+
     function toggleGreetingFeature(isEnabled) {
       isGreetingEnabled = Boolean(isEnabled);
       localStorage.setItem('ptm_ar_greeting_enabled', String(isGreetingEnabled));
-      const box = document.getElementById('previewGreetingBox');
-      const cb = document.getElementById('toggleGreetingCheckbox');
-      if (cb) cb.checked = isGreetingEnabled;
-
-      if (box) {
-        if (isGreetingEnabled) {
-          box.classList.remove('hidden');
-        } else {
-          box.classList.add('hidden');
-        }
-      }
+      applyGreetingUI(isGreetingEnabled);
       invalidateShareCache();
-      renderWatermarkOverlay();
     }
 
     function toggleClosingFeature(isEnabled) {
       isClosingEnabled = Boolean(isEnabled);
       localStorage.setItem('ptm_ar_closing_enabled', String(isClosingEnabled));
-      const box = document.getElementById('previewClosingBox');
-      const cb = document.getElementById('toggleClosingCheckbox');
-      if (cb) cb.checked = isClosingEnabled;
-
-      if (box) {
-        if (isClosingEnabled) {
-          box.classList.remove('hidden');
-        } else {
-          box.classList.add('hidden');
-        }
-      }
+      applyClosingUI(isClosingEnabled);
       invalidateShareCache();
-      renderWatermarkOverlay();
     }
 
     function getSelectedBankStrings() {
       const selectedBanks = [];
       document.querySelectorAll('#bankContainer .bank-item').forEach(item => {
         const cb = item.querySelector('input[type="checkbox"]');
-        const lbl = item.querySelector('label');
+        const lbl = item.querySelector('.bank-label-text') || item.querySelector('label');
         if (cb && cb.checked && lbl) {
           selectedBanks.push(lbl.innerText.trim());
         }
@@ -1938,73 +2094,131 @@
       return selectedBanks;
     }
 
-    function handleBankSelectionChange() {
+    function handleBankSelectionChange(cbElement) {
+      if (cbElement) {
+        const box = cbElement.parentElement && cbElement.parentElement.querySelector('.bank-check-box');
+        if (box) {
+          box.classList.toggle('is-checked', cbElement.checked);
+        }
+      }
       invalidateShareCache();
       renderWatermarkOverlay();
     }
 
+    function getWatermarkTileData() {
+      const activeBanks = getSelectedBankStrings();
+      const cacheKey = activeBanks.join('||');
+
+      if (watermarkTileCache.key === cacheKey && watermarkTileCache.tileCanvas) {
+        return watermarkTileCache;
+      }
+
+      const angleDeg = -35;                              
+      const companyFontSize = 10;                        
+      const bankFontSize = 9.5;                          
+      const lineHeight = 12;                             
+      const watermarkColor = 'rgba(38, 84, 138, 0.22)';  
+      const minGapAlong = 28;                            
+      const minGapPerp = 68;                       
+
+      const angleRad = angleDeg * Math.PI / 180;
+      const cosA = Math.abs(Math.cos(angleRad));
+      const sinA = Math.abs(Math.sin(angleRad));
+
+      const measureCanvas = document.createElement('canvas');
+      const mctx = measureCanvas.getContext('2d');
+      mctx.font = `700 ${companyFontSize}px Inter, sans-serif`;
+      let maxTextW = mctx.measureText('PT PRIMA TUNGGAL MANDIRI').width;
+
+      if (activeBanks.length > 0) {
+        mctx.font = `600 ${bankFontSize}px Inter, sans-serif`;
+        for (let i = 0; i < activeBanks.length; i++) {
+          const w = mctx.measureText(activeBanks[i]).width;
+          if (w > maxTextW) maxTextW = w;
+        }
+      }
+
+      const totalLines = 1 + activeBanks.length;
+      const blockH = totalLines * lineHeight;
+
+      const minStepAlong = maxTextW + minGapAlong;
+      const requiredPerp = Math.max(minGapPerp, blockH + 26, minStepAlong * sinA * cosA);
+
+      const tileW = Math.ceil(requiredPerp / sinA);
+      const tileH = Math.ceil(requiredPerp / cosA);
+
+      const dpr = 2;
+      const tileCanvas = document.createElement('canvas');
+      tileCanvas.width = tileW * dpr;
+      tileCanvas.height = tileH * dpr;
+
+      const tctx = tileCanvas.getContext('2d');
+      tctx.scale(dpr, dpr);
+      tctx.textAlign = 'center';
+      tctx.textBaseline = 'middle';
+      tctx.fillStyle = watermarkColor;
+
+      const startY = -((totalLines - 1) * lineHeight) / 2;
+
+      for (let ox = -1; ox <= 1; ox++) {
+        for (let oy = -1; oy <= 1; oy++) {
+          tctx.save();
+          tctx.translate((tileW / 2) + (ox * tileW), (tileH / 2) + (oy * tileH));
+          tctx.rotate(angleRad);
+
+          tctx.font = `700 ${companyFontSize}px Inter, sans-serif`;
+          tctx.fillText('PT PRIMA TUNGGAL MANDIRI', 0, startY);
+
+          if (activeBanks.length > 0) {
+            tctx.font = `600 ${bankFontSize}px Inter, sans-serif`;
+            for (let bIdx = 0; bIdx < activeBanks.length; bIdx++) {
+              tctx.fillText(activeBanks[bIdx], 0, startY + ((bIdx + 1) * lineHeight));
+            }
+          }
+
+          tctx.restore();
+        }
+      }
+
+      watermarkTileCache.key = cacheKey;
+      watermarkTileCache.tileCanvas = tileCanvas;
+      watermarkTileCache.dataUrl = tileCanvas.toDataURL('image/png');
+      watermarkTileCache.tileW = tileW;
+      watermarkTileCache.tileH = tileH;
+
+      return watermarkTileCache;
+    }
+
     function renderWatermarkOverlay() {
-      const container = document.getElementById('exportContainer');
-      const canvas = document.getElementById('watermarkCanvas');
-      if (!container || !canvas) return;
+      const overlay = document.getElementById('watermarkOverlay');
+      if (!overlay) return;
 
       if (!hasWatermarkAccess) {
-        canvas.classList.add('hidden');
+        overlay.classList.add('hidden');
         return;
       }
 
-      canvas.classList.remove('hidden');
+      const tile = getWatermarkTileData();
+      overlay.style.backgroundImage = `url("${tile.dataUrl}")`;
+      overlay.style.backgroundRepeat = 'repeat';
+      overlay.style.backgroundSize = `${tile.tileW}px ${tile.tileH}px`;
+      overlay.style.backgroundPosition = '0 0';
+      overlay.classList.remove('hidden');
+    }
 
-      const width = container.offsetWidth || 1000;
-      const height = container.offsetHeight || 560;
+    function compositeWatermarkOnCanvas(targetCanvas) {
+      if (!hasWatermarkAccess || !targetCanvas) return;
+      const tile = getWatermarkTileData();
+      if (!tile || !tile.tileCanvas) return;
 
-      const dpr = 2;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
+      const ctx = targetCanvas.getContext('2d');
+      const pattern = ctx.createPattern(tile.tileCanvas, 'repeat');
+      if (!pattern) return;
 
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.scale(dpr, dpr);
-
-      const angleDeg = -35;                         
-      const stepX = 180;                            
-      const stepY = 68;                             
-      const watermarkColor = 'rgba(38, 84, 138, 0.22)'; 
-
-      ctx.translate(width / 2, height / 2);
-      ctx.rotate(angleDeg * Math.PI / 180);
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = watermarkColor;
-
-      const activeBanks = getSelectedBankStrings();
-
-      const diag = Math.ceil(Math.sqrt(width * width + height * height));
-
-      let rowIndex = 0;
-      for (let y = -diag; y <= diag; y += stepY) {
-        const offsetX = (rowIndex % 2 !== 0) ? (stepX / 2) : 0;
-
-        for (let x = -diag; x <= diag; x += stepX) {
-          const drawX = x + offsetX;
-
-          ctx.font = '700 10px Inter, sans-serif';
-          ctx.fillText('PT PRIMA TUNGGAL MANDIRI', drawX, y - 6);
-
-          if (activeBanks.length > 0) {
-            ctx.font = '600 9.5px Inter, sans-serif';
-            activeBanks.forEach((bankText, bIdx) => {
-              ctx.fillText(bankText, drawX, y + 7 + (bIdx * 12));
-            });
-          }
-        }
-        rowIndex++;
-      }
-
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
       ctx.restore();
     }
 
@@ -2089,9 +2303,7 @@
 
       currentPreviewData = selectedData;
 
-      const previewTbody = document.getElementById('previewTableBody');
-      previewTbody.innerHTML = '';
-
+      const previewRowsHtml = [];
       let lastMonthYear = '';
       let sumNilai = 0;
       let sumSisa = 0;
@@ -2112,37 +2324,35 @@
         const currentMonthYear = dateParts.length >= 3 ? `${dateParts[1]} ${dateParts[2]}` : '';
 
         if (index > 0 && currentMonthYear && lastMonthYear && currentMonthYear !== lastMonthYear) {
-          const emptyTr = document.createElement('tr');
-          emptyTr.className = 'month-separator-row';
-          emptyTr.innerHTML = '<td colspan="10" class="py-2 bg-gray-50 border-y border-gray-200"></td>';
-          previewTbody.appendChild(emptyTr);
+          previewRowsHtml.push('<tr class="month-separator-row"><td colspan="10" class="py-2 bg-gray-50 border-y border-gray-200"></td></tr>');
         }
         lastMonthYear = currentMonthYear;
 
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-gray-200';
-        tr.innerHTML = `
-          <td class="p-1.5 border border-gray-200 text-center">${item.noFaktur}</td>
-          <td class="p-1.5 border border-gray-200 text-center whitespace-nowrap">${item.tglFaktur}</td>
-          <td class="p-1.5 border border-gray-200 text-center whitespace-nowrap">${item.jatuhTempo}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${formatRupiah(item.nilaiFaktur)}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${formatRupiah(item.sisaPiutang)}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${item.umurJt}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${item.namaPelanggan}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${item.namaPenjual}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${item.namaKontak}</td>
-          <td class="p-1.5 border border-gray-200 text-center">${item.tanggalJt}</td>
-        `;
-        previewTbody.appendChild(tr);
+        previewRowsHtml.push(`
+          <tr class="border-b border-gray-200">
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.noFaktur)}</td>
+            <td class="p-1.5 border border-gray-200 text-center whitespace-nowrap">${escapeHtml(item.tglFaktur)}</td>
+            <td class="p-1.5 border border-gray-200 text-center whitespace-nowrap">${escapeHtml(item.jatuhTempo)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${formatRupiah(item.nilaiFaktur)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${formatRupiah(item.sisaPiutang)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.umurJt)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.namaPelanggan)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.namaPenjual)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.namaKontak)}</td>
+            <td class="p-1.5 border border-gray-200 text-center">${escapeHtml(item.tanggalJt)}</td>
+          </tr>
+        `);
       });
+
+      document.getElementById('previewTableBody').innerHTML = previewRowsHtml.join('');
 
       document.getElementById('prevTotalNilai').innerText = 'Rp ' + formatRupiah(sumNilai);
       document.getElementById('prevTotalSisa').innerText = 'Rp ' + formatRupiah(sumSisa);
       document.getElementById('prevTotalJT').innerText = hasJT ? 'Rp ' + formatRupiah(sumJT) : '-';
 
       updateGreetingContent(selectedData);
-      toggleGreetingFeature(isGreetingEnabled);
-      toggleClosingFeature(isClosingEnabled);
+      applyGreetingUI(isGreetingEnabled);
+      applyClosingUI(isClosingEnabled);
 
       columnVisibilityState = [true, true, true, true, true, true, true, true, true, true];
       togglePreviewColumnBox(false);
@@ -2152,33 +2362,31 @@
       renderBankOptions();
       invalidateShareCache();
       updateShareAndCopyButtonsVisibility();
+      renderWatermarkOverlay();
 
       document.getElementById('previewModal').classList.remove('hidden');
-      requestAnimationFrame(() => {
-        renderWatermarkOverlay();
-      });
     }
 
     function renderColumnToggleCheckboxes() {
       const container = document.getElementById('columnToggleContainer');
       if (!container) return;
-      container.innerHTML = '';
 
       let activeCount = 0;
-      previewColumns.forEach((col, idx) => {
+      const htmlParts = previewColumns.map((col, idx) => {
         const isChecked = columnVisibilityState[idx];
         if (isChecked) activeCount++;
-
-        const label = document.createElement('label');
-        label.className = `flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${
-          isChecked ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-gray-100 border-gray-300 text-gray-500'
-        }`;
-        label.innerHTML = `
-          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePreviewColumn(${idx}, this.checked)" class="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5">
-          <span>${col.label}</span>
+        const stateCls = isChecked
+          ? 'bg-blue-50 border-blue-300 text-blue-900'
+          : 'bg-gray-100 border-gray-300 text-gray-500';
+        return `
+          <label class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium cursor-pointer transition select-none ${stateCls}">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="togglePreviewColumn(${idx}, this.checked)" class="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5">
+            <span>${col.label}</span>
+          </label>
         `;
-        container.appendChild(label);
       });
+
+      container.innerHTML = htmlParts.join('');
 
       const badge = document.getElementById('previewColCountBadge');
       if (badge) {
@@ -2191,7 +2399,6 @@
       invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
-      renderWatermarkOverlay();
     }
 
     function toggleAllPreviewColumns(status) {
@@ -2199,7 +2406,6 @@
       invalidateShareCache();
       renderColumnToggleCheckboxes();
       applyColumnVisibility();
-      renderWatermarkOverlay();
     }
 
     function applyColumnVisibility() {
@@ -2238,28 +2444,36 @@
 
     function renderBankOptions() {
       const container = document.getElementById('bankContainer');
-      container.innerHTML = '';
+      if (!container) return;
 
       if (bankOptions.length === 0) {
         container.innerHTML = '<p class="text-gray-400 italic">Tidak ada informasi rekening bank.</p>';
         return;
       }
 
+      const itemsHtml = [];
       bankOptions.forEach((opt, idx) => {
         opt.banks.forEach((bankStr, bIdx) => {
-          const div = document.createElement('div');
-          div.className = 'flex items-center space-x-2 bank-item';
-
           const isChecked = true;
           const isDisabled = opt.isLocked ? 'disabled' : '';
+          const cursorCls = opt.isLocked ? 'cursor-default' : 'cursor-pointer';
+          const boxStateCls = `${isChecked ? 'is-checked' : ''} ${opt.isLocked ? 'is-locked' : ''}`.trim();
 
-          div.innerHTML = `
-            <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} onchange="handleBankSelectionChange()" class="rounded text-navy focus:ring-navy">
-            <label for="bank_${idx}_${bIdx}" class="cursor-pointer font-medium text-gray-700">${bankStr}</label>
-          `;
-          container.appendChild(div);
+          itemsHtml.push(`
+            <div class="bank-item">
+              <label for="bank_${idx}_${bIdx}" class="inline-flex items-center gap-2 ${cursorCls} select-none">
+                <input type="checkbox" id="bank_${idx}_${bIdx}" ${isChecked ? 'checked' : ''} ${isDisabled} onchange="handleBankSelectionChange(this)" data-html2canvas-ignore="true" class="sr-only">
+                <span class="bank-check-box ${boxStateCls}" aria-hidden="true">
+                  <span class="bank-check-mark"></span>
+                </span>
+                <span class="bank-label-text font-medium text-gray-700 leading-4">${escapeHtml(bankStr)}</span>
+              </label>
+            </div>
+          `);
         });
       });
+
+      container.innerHTML = itemsHtml.join('');
     }
 
     function closePreviewModal() {
@@ -2306,8 +2520,6 @@
       element.style.width = '1000px';
       element.style.minWidth = '1000px';
 
-      renderWatermarkOverlay();
-
       return html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',
@@ -2316,17 +2528,16 @@
         element.style.width = originalWidth;
         element.style.minWidth = originalMinWidth;
         hiddenBankItems.forEach(item => {
-          item.style.display = 'flex';
+          item.style.display = '';
         });
-        renderWatermarkOverlay();
+        compositeWatermarkOnCanvas(canvas);
         return canvas;
       }).catch(err => {
         element.style.width = originalWidth;
         element.style.minWidth = originalMinWidth;
         hiddenBankItems.forEach(item => {
-          item.style.display = 'flex';
+          item.style.display = '';
         });
-        renderWatermarkOverlay();
         throw err;
       });
     }

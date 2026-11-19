@@ -78,6 +78,8 @@ function getARData(username) {
   var hasSummaryAccess = false;
   var hasWatchlistAccess = false;
   var hasNopelAccess = false;
+  var userNopelPrefix = '';
+  var userNopelSales = '';
   
   var cleanUsername = String(username || '').trim().toUpperCase();
 
@@ -115,8 +117,9 @@ function getARData(username) {
       var watchlistVal = String(confData[i][8] || '').trim().toUpperCase();
       hasWatchlistAccess = (watchlistVal === 'YA');
 
-      var nopelVal = String(confData[i][9] || '').trim();
-      hasNopelAccess = (nopelVal !== '');
+      userNopelPrefix = String(confData[i][9] || '').trim();
+      userNopelSales  = String(confData[i][10] || '').trim();
+      hasNopelAccess  = (userNopelPrefix !== '');
       break;
     }
   }
@@ -300,6 +303,16 @@ function getARData(username) {
   if (hasWatchlistAccess && typeof getUserWatchlistFromCloud === 'function') {
     cloudWatchlist = getUserWatchlistFromCloud(cleanUsername);
   }
+
+  var nopelItems = [];
+  var nopelWaktuPembaruan = '-';
+  if (hasNopelAccess && typeof buildNopelPayload_ === 'function') {
+    var nopelRes = buildNopelPayload_(ss, userNopelPrefix, userNopelSales);
+    if (nopelRes && nopelRes.success) {
+      nopelItems = nopelRes.items || [];
+      nopelWaktuPembaruan = nopelRes.waktuPembaruan || '-';
+    }
+  }
   
   return {
     success: true,
@@ -311,6 +324,8 @@ function getARData(username) {
     hasNopelAccess: hasNopelAccess,
     hasWatermark: hasWatermark,
     cloudWatchlist: cloudWatchlist,
-    waktuPembaruan: waktuPembaruan
+    waktuPembaruan: waktuPembaruan,
+    nopelItems: nopelItems,
+    nopelWaktuPembaruan: nopelWaktuPembaruan
   };
 }
